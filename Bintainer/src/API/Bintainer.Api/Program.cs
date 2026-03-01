@@ -18,6 +18,17 @@ builder.Configuration.AddModuleConfiguration(["users", "inventory"]);
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins("http://localhost:3000")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
+});
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -74,6 +85,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseExceptionHandler();
+
+app.UseCors();
 
 app.UseAuthentication();
 app.UseAuthorization();
