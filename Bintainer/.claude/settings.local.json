@@ -15,7 +15,12 @@
       "Bash(mkdir:*)",
       "Bash(dotnet sln:*)",
       "Bash(rm:*)",
-      "Bash(dotnet build:*)"
+      "Bash(dotnet build:*)",
+      "Bash(dotnet ef:*)",
+      "Bash(powershell.exe:*)",
+      "Bash(PGPASSWORD=postgres \"/c/Program Files/PostgreSQL/18/bin/psql.exe\":*)",
+      "Bash(PGPASSWORD=admin \"/c/Program Files/PostgreSQL/18/bin/psql.exe\":*)",
+      "Bash(dotnet test:*)"
     ]
   }
 }
