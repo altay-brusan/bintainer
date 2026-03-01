@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Common\Bintainer.Common.Domain\Bintainer.Common.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Modules\Users\Bintainer.Modules.Users.Domain\Bintainer.Modules.Users.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

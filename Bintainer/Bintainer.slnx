@@ -21,4 +21,12 @@
     <Project Path="src/Modules/Users/Bintainer.Modules.Users.Infrastructure/Bintainer.Modules.Users.Infrastructure.csproj" />
     <Project Path="src/Modules/Users/Bintainer.Modules.Users.Presentation/Bintainer.Modules.Users.Presentation.csproj" />
   </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="tests/Bintainer.Common.Domain.UnitTests/Bintainer.Common.Domain.UnitTests.csproj" />
+    <Project Path="tests/Bintainer.Common.Application.UnitTests/Bintainer.Common.Application.UnitTests.csproj" />
+    <Project Path="tests/Bintainer.Modules.Users.Domain.UnitTests/Bintainer.Modules.Users.Domain.UnitTests.csproj" />
+    <Project Path="tests/Bintainer.Modules.Users.Application.UnitTests/Bintainer.Modules.Users.Application.UnitTests.csproj" />
+    <Project Path="tests/Bintainer.Modules.Inventory.Domain.UnitTests/Bintainer.Modules.Inventory.Domain.UnitTests.csproj" />
+    <Project Path="tests/Bintainer.Modules.Inventory.Application.UnitTests/Bintainer.Modules.Inventory.Application.UnitTests.csproj" />
+  </Folder>
 </Solution>
