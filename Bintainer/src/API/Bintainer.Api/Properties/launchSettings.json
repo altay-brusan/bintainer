@@ -1,0 +1,13 @@
+{
+  "profiles": {
+    "Bintainer.Api": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "launchUrl": "swagger",
+      "applicationUrl": "https://localhost:49778;http://localhost:49779"
+    }
+  }
+}
