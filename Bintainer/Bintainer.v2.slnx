@@ -1,0 +1,24 @@
+<Solution>
+  <Folder Name="/API/">
+    <Project Path="src/API/Bintainer.Api/Bintainer.Api.csproj" />
+  </Folder>
+  <Folder Name="/Common/">
+    <Project Path="src/Common/Bintainer.Common.Application/Bintainer.Common.Application.csproj" />
+    <Project Path="src/Common/Bintainer.Common.Domain/Bintainer.Common.Domain.csproj" />
+    <Project Path="src/Common/Bintainer.Common.Infrastructure/Bintainer.Common.Infrastructure.csproj" />
+    <Project Path="src/Common/Bintainer.Common.Presentation/Bintainer.Common.Presentation.csproj" />
+  </Folder>
+  <Folder Name="/Modules/" />
+  <Folder Name="/Modules/Inventory/">
+    <Project Path="src/Modules/Inventory/Bintainer.Modules.Inventory.Application/Bintainer.Modules.Inventory.Application.csproj" />
+    <Project Path="src/Modules/Inventory/Bintainer.Modules.Inventory.Domain/Bintainer.Modules.Inventory.Domain.csproj" />
+    <Project Path="src/Modules/Inventory/Bintainer.Modules.Inventory.Infrastructure/Bintainer.Modules.Inventory.Infrastructure.csproj" />
+    <Project Path="src/Modules/Inventory/Bintainer.Modules.Inventory.Presentation/Bintainer.Modules.Inventory.Presentation.csproj" />
+  </Folder>
+  <Folder Name="/Modules/Users/">
+    <Project Path="src/Modules/Users/Bintainer.Modules.Users.Application/Bintainer.Modules.Users.Application.csproj" />
+    <Project Path="src/Modules/Users/Bintainer.Modules.Users.Domain/Bintainer.Modules.Users.Domain.csproj" />
+    <Project Path="src/Modules/Users/Bintainer.Modules.Users.Infrastructure/Bintainer.Modules.Users.Infrastructure.csproj" />
+    <Project Path="src/Modules/Users/Bintainer.Modules.Users.Presentation/Bintainer.Modules.Users.Presentation.csproj" />
+  </Folder>
+</Solution>

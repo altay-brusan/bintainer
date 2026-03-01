@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Common\Bintainer.Common.Infrastructure\Bintainer.Common.Infrastructure.csproj" />
+    <ProjectReference Include="..\Bintainer.Modules.Users.Application\Bintainer.Modules.Users.Application.csproj" />
+    <ProjectReference Include="..\Bintainer.Modules.Users.Presentation\Bintainer.Modules.Users.Presentation.csproj" />
+  </ItemGroup>
+
+</Project>

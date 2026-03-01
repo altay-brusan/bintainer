@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Common\Bintainer.Common.Application\Bintainer.Common.Application.csproj" />
+    <ProjectReference Include="..\Bintainer.Modules.Inventory.Domain\Bintainer.Modules.Inventory.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

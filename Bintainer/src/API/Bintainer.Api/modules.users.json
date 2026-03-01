@@ -1,0 +1,10 @@
+{
+  "Users": {
+    "Jwt": {
+      "Issuer": "Bintainer",
+      "Audience": "Bintainer",
+      "Secret": "super-secret-key-that-should-be-at-least-32-characters-long",
+      "ExpirationInMinutes": 60
+    }
+  }
+}

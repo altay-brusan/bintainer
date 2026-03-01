@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Common\Bintainer.Common.Presentation\Bintainer.Common.Presentation.csproj" />
+    <ProjectReference Include="..\Bintainer.Modules.Users.Application\Bintainer.Modules.Users.Application.csproj" />
+  </ItemGroup>
+
+</Project>

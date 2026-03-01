@@ -1,7 +1,21 @@
 {
   "permissions": {
     "allow": [
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "WebSearch",
+      "WebFetch(domain:help.fishbowlinventory.com)",
+      "WebFetch(domain:helmwms.com)",
+      "WebFetch(domain:partsbox.com)",
+      "WebFetch(domain:community.sap.com)",
+      "WebFetch(domain:www.tutorialspoint.com)",
+      "WebFetch(domain:deepwiki.com)",
+      "Bash(xargs grep:*)",
+      "Bash(python3:*)",
+      "Bash(dotnet new:*)",
+      "Bash(mkdir:*)",
+      "Bash(dotnet sln:*)",
+      "Bash(rm:*)",
+      "Bash(dotnet build:*)"
     ]
   }
 }
