@@ -4,63 +4,76 @@
 
 ```bash
 # Restore and build
-dotnet build Bintainer.sln
+dotnet build Bintainer.slnx
 
-# Run the web app
-dotnet run --project Bintainer.WebApp
-
-# Run tests
-dotnet test Bintainer.Test
+# Run the API
+dotnet run --project src/API/Bintainer.Api
 
 # Add EF Core migration (from repo root)
-dotnet ef migrations add <MigrationName> --project Bintainer.Repository --startup-project Bintainer.WebApp
+dotnet ef migrations add <MigrationName> --project src/Modules/Users/Bintainer.Modules.Users.Infrastructure --startup-project src/API/Bintainer.Api
+dotnet ef migrations add <MigrationName> --project src/Modules/Inventory/Bintainer.Modules.Inventory.Infrastructure --startup-project src/API/Bintainer.Api
 
 # Apply migrations
-dotnet ef database update --project Bintainer.Repository --startup-project Bintainer.WebApp
+dotnet ef database update --project src/Modules/Users/Bintainer.Modules.Users.Infrastructure --startup-project src/API/Bintainer.Api
+dotnet ef database update --project src/Modules/Inventory/Bintainer.Modules.Inventory.Infrastructure --startup-project src/API/Bintainer.Api
 ```
 
 ## Solution Structure
 
 ```
-Bintainer.sln
-├── Bintainer.Model          (.NET 6.0) - Entities, DTOs, view models, Response<T>
-├── Bintainer.SharedResources (.NET 6.0) - Localization resources
-├── Bintainer.Repository     (.NET 7.0) - DbContexts, repositories, EF migrations
-├── Bintainer.Service        (.NET 7.0) - Business logic, AutoMapper profile
-├── Bintainer.WebApp         (.NET 7.0) - Razor Pages UI, Program.cs (DI root)
-└── Bintainer.Test           (.NET 7.0) - NUnit + Moq tests
+Bintainer.slnx (.NET 9 — Clean Architecture modular monolith)
+├── src/Common/
+│   ├── Bintainer.Common.Domain          — Entity base, Result/Error, domain events
+│   ├── Bintainer.Common.Application     — CQRS messaging, pipeline behaviors, abstractions
+│   ├── Bintainer.Common.Infrastructure  — PostgreSQL, MassTransit, caching, interceptors
+│   └── Bintainer.Common.Presentation   — Minimal API endpoints, ProblemDetails mapping
+├── src/Modules/Users/
+│   ├── Bintainer.Modules.Users.Domain          — User, RefreshToken entities
+│   ├── Bintainer.Modules.Users.Application     — Register, Login, Refresh, Logout, GetCurrentUser
+│   ├── Bintainer.Modules.Users.Presentation    — Auth endpoints (api/auth/*)
+│   └── Bintainer.Modules.Users.Infrastructure  — UsersDbContext, Identity, JWT
+├── src/Modules/Inventory/
+│   ├── Bintainer.Modules.Inventory.Domain          — Inventory, StorageUnit, Bin, Compartment
+│   ├── Bintainer.Modules.Inventory.Application     — CRUD for inventories and storage units
+│   ├── Bintainer.Modules.Inventory.Presentation    — Inventory endpoints (api/inventories/*, api/storage-units/*)
+│   └── Bintainer.Modules.Inventory.Infrastructure  — InventoryDbContext, EF configs
+└── src/API/
+    └── Bintainer.Api — Composition root (Serilog, Swagger, JWT auth, module wiring)
 ```
 
-**Dependency flow:** WebApp → Service → Repository → Model. SharedResources is referenced by WebApp and Service.
+**Dependency flow:** API → Module.Infrastructure → Module.Application + Module.Presentation → Common layers → Common.Domain (leaf)
 
 ## Architecture & Patterns
 
-- **Razor Pages** (not MVC controllers or REST API). Pages live in `Bintainer.WebApp/Pages/`.
-- **Repository pattern**: interfaces in Repository project (`IBinRepository`, `IPartRepository`, etc.), all registered as **scoped**.
-- **Service layer**: interfaces in Service project (`IBinService`, `IPartService`, etc.), all registered as **scoped**.
-- **`Response<T>`** (defined in `Bintainer.Model/Template/Response.cs`): every service method returns `Response<T>` with `IsSuccess`, `Result`, and `Message` properties.
-- **AutoMapper**: `MappingProfile` in `Bintainer.Service/Helper/MappingProfile.cs` maps entities to view models.
+- **Minimal API** endpoints via `IEndpoint` auto-discovery pattern
+- **CQRS** with MediatR: `ICommand`/`IQuery` with `ICommandHandler`/`IQueryHandler`
+- **Result pattern**: `Result<T>` with `IsSuccess`, `Error` (no exceptions for business logic)
+- **Pipeline behaviors**: Validation (FluentValidation), Exception handling, Request logging
+- **Repository pattern**: interfaces in Domain, implementations in Infrastructure
+- **Unit of Work**: each module's DbContext implements `IUnitOfWork`
+- **Domain events**: raised via `Entity.Raise()`, published by `PublishDomainEventsInterceptor`
+- **Schema-per-module**: `users`, `inventory` PostgreSQL schemas
 
 ## Database
 
-- **PostgreSQL** — database name **`EtrekDb`**, using `Npgsql.EntityFrameworkCore.PostgreSQL` provider.
-- Connection string in `appsettings.json` under `ConnectionStrings:DefaultConnection`.
-- **Two DbContexts** in `Bintainer.Repository/`:
-  - `BintainerDbContext` (extends `DbContext`) — domain entities (Bins, Parts, Orders, Inventories, etc.)
-  - `ApplicationDbContext` (extends `IdentityDbContext`) — ASP.NET Identity tables
-- EF Core migrations live in the Repository project.
+- **PostgreSQL** — database name **`BintainerDb`**, using `Npgsql.EntityFrameworkCore.PostgreSQL`
+- Connection string in `src/API/Bintainer.Api/appsettings.json` under `ConnectionStrings:DefaultConnection`
+- **Snake_case naming** via `EFCore.NamingConventions`
+- **Two DbContexts**:
+  - `UsersDbContext` (extends `IdentityDbContext<IdentityUser>`) — schema `users`
+  - `InventoryDbContext` (extends `DbContext`) — schema `inventory`
+- JWT config in `modules.users.json`, inventory config in `modules.inventory.json`
 
-## DI Registration (Program.cs)
+## DI Registration
 
-All repositories and services are **scoped** except `IEmailSender` → `SESEmailSender` which is **transient**. `DigikeyService` is also scoped (Digikey API integration).
-
-## Testing
-
-- **NUnit 3** + **Moq** + **MockQueryable.Moq** for mocking EF Core queryables.
-- Tests in `Bintainer.Test/`. The test project references all other projects.
+All services registered as **scoped**. Module registration via extension methods:
+- `AddApplication(assemblies)` — MediatR + behaviors + validators
+- `AddInfrastructure(connectionString)` — Npgsql, caching, MassTransit, clock, auth
+- `AddUsersModule(config)` — Identity, JWT, user repos
+- `AddInventoryModule(config)` — Inventory DbContext, repos
 
 ## External Services
 
-- **AWS SES** for email sending (`SESEmailSender`).
-- **Digikey API** integration (`DigikeyService`) for part data lookup.
-- **Serilog** for logging (`IAppLogger` → `AppLogger`).
+- **Serilog** for structured logging
+- **MassTransit** (in-memory) for event bus
+- **Swagger/OpenAPI** with JWT bearer auth support
