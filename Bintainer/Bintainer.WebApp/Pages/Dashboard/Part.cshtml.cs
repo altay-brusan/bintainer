@@ -1,7 +1,3 @@
-using Amazon.Runtime.Internal;
-using Amazon.SimpleEmail.Model.Internal.MarshallTransformations;
-using Azure;
-using Azure.Core;
 using Bintainer.Model.DTO;
 using Bintainer.Model.Entity;
 using Bintainer.Model.Request;

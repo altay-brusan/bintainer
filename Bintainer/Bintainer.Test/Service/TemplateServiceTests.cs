@@ -24,6 +24,7 @@ namespace Bintainer.Test.Service
         private Mock<IAppLogger> _appLoggerMock;
         private Mock<IStringLocalizer<ErrorMessages>> _localizerMock;
         private Mock<IMapper> _mapperMock;
+        private Mock<IUserRepository> _userRepositoryMock;
         private TemplateService _templateService;
 
         [SetUp]
@@ -33,12 +34,14 @@ namespace Bintainer.Test.Service
             _appLoggerMock = new Mock<IAppLogger>();
             _localizerMock = new Mock<IStringLocalizer<ErrorMessages>>();
             _mapperMock = new Mock<IMapper>();
+            _userRepositoryMock = new Mock<IUserRepository>();
 
             _templateService = new TemplateService(
                 _templateRepositoryMock.Object,
                 _appLoggerMock.Object,
                 _localizerMock.Object,
-                _mapperMock.Object
+                _mapperMock.Object,
+                _userRepositoryMock.Object
             );
         }
 

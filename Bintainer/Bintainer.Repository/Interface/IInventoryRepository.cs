@@ -15,6 +15,7 @@ namespace Bintainer.Repository.Interface
         public List<InventorySection>? GetAllInventorySections(int inventoryId);
         public InventorySection? GetSection(string userId, int sectionId);
         public InventorySection? GetSection(string userId, string sectionId);
+        public InventorySection? GetSectionById(int sectionId);
         public InventorySection? UpdateSection(InventorySection? section);
         public InventorySection? AddBin(InventorySection section, Bin bin);
         public Inventory? CreateOrUpdateInventory(Inventory? inventory);

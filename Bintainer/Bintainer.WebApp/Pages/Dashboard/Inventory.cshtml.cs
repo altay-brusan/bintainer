@@ -7,7 +7,6 @@ using Bintainer.Service.Interface;
 using Bintainer.SharedResources.Const;
 using Bintainer.SharedResources.Interface;
 using Bintainer.SharedResources.Resources;
-using Bintainer.WebApp.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;

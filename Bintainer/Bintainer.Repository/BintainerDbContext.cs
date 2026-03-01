@@ -60,8 +60,6 @@ public partial class BintainerDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.UseCollation("SQL_Latin1_General_CP1_CI_AS");
-
         modelBuilder.Entity<AspNetRole>(entity =>
         {
             entity.Property(e => e.Name).HasMaxLength(256);
@@ -124,28 +122,21 @@ public partial class BintainerDbContext : DbContext
 
         modelBuilder.Entity<Bin>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Bin__3214EC0796C0FA57");
-
-            entity.ToTable("Bin", tb => tb.HasTrigger("CheckBinCoordinates"));
+            entity.ToTable("Bin");
 
             entity.HasOne(d => d.Section).WithMany(p => p.Bins)
-                .HasForeignKey(d => d.SectionId)
-                .HasConstraintName("FK_Bin_InventorySection");
+                .HasForeignKey(d => d.SectionId);
         });
 
         modelBuilder.Entity<BinSubspace>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__BinSubsp__3214EC07F3C4DE19");
-
             entity.ToTable("BinSubspace");
 
             entity.Property(e => e.Label)
-                .HasMaxLength(100)
-                .IsFixedLength();
+                .HasMaxLength(100);
 
             entity.HasOne(d => d.Bin).WithMany(p => p.BinSubspaces)
-                .HasForeignKey(d => d.BinId)
-                .HasConstraintName("FK_BinSubspace_Bin");
+                .HasForeignKey(d => d.BinId);
         });
 
         modelBuilder.Entity<Inventory>(entity =>
@@ -154,14 +145,12 @@ public partial class BintainerDbContext : DbContext
 
             entity.Property(e => e.Admin).HasMaxLength(256);
             entity.Property(e => e.Name)
-                .HasMaxLength(150)
-                .IsFixedLength();
+                .HasMaxLength(150);
             entity.Property(e => e.UserId).HasMaxLength(450);
 
             entity.HasOne(d => d.User).WithMany(p => p.Inventories)
                 .HasForeignKey(d => d.UserId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Inventory_AspNetUsers");
+                .OnDelete(DeleteBehavior.ClientSetNull);
         });
 
         modelBuilder.Entity<InventorySection>(entity =>
@@ -169,115 +158,96 @@ public partial class BintainerDbContext : DbContext
             entity.ToTable("InventorySection");
 
             entity.Property(e => e.SectionName)
-                .HasMaxLength(150)
-                .IsFixedLength();
+                .HasMaxLength(150);
 
             entity.HasOne(d => d.Inventory).WithMany(p => p.InventorySections)
                 .HasForeignKey(d => d.InventoryId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_InventorySection_Inventory");
+                .OnDelete(DeleteBehavior.ClientSetNull);
         });
 
         modelBuilder.Entity<Order>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Order__3214EC076C127BA1");
-
             entity.ToTable("Order");
 
-            entity.Property(e => e.HandOverDate).HasColumnType("datetime");
-            entity.Property(e => e.OrderDate).HasColumnType("datetime");
+            entity.Property(e => e.HandOverDate).HasColumnType("timestamp without time zone");
+            entity.Property(e => e.OrderDate).HasColumnType("timestamp without time zone");
             entity.Property(e => e.OrderNumber)
                 .HasMaxLength(100)
-                .HasDefaultValueSql("('default')")
-                .IsFixedLength();
+                .HasDefaultValueSql("'default'");
             entity.Property(e => e.Supplier)
                 .HasMaxLength(100)
-                .HasDefaultValueSql("('default')")
-                .IsFixedLength();
+                .HasDefaultValueSql("'default'");
             entity.Property(e => e.UserId).HasMaxLength(450);
 
             entity.HasOne(d => d.User).WithMany(p => p.Orders)
                 .HasForeignKey(d => d.UserId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Order_AspNetUsers");
+                .OnDelete(DeleteBehavior.ClientSetNull);
         });
 
         modelBuilder.Entity<OrderPartAssociation>(entity =>
         {
-            entity.HasKey(e => new { e.OrderId, e.PartId }).HasName("PK_OrderPart");
+            entity.HasKey(e => new { e.OrderId, e.PartId });
 
             entity.ToTable("OrderPartAssociation");
 
-            entity.Property(e => e.Quantity).HasDefaultValueSql("((0))");
+            entity.Property(e => e.Quantity).HasDefaultValueSql("0");
 
             entity.HasOne(d => d.Order).WithMany(p => p.OrderPartAssociations)
                 .HasForeignKey(d => d.OrderId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_OrderPart_Order");
+                .OnDelete(DeleteBehavior.ClientSetNull);
 
             entity.HasOne(d => d.Part).WithMany(p => p.OrderPartAssociations)
                 .HasForeignKey(d => d.PartId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_OrderPart_Part");
+                .OnDelete(DeleteBehavior.ClientSetNull);
         });
 
         modelBuilder.Entity<Part>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Part__3214EC07F1E612B4");
-
             entity.ToTable("Part");
 
             entity.HasIndex(e => e.GuidId, "IDX_Part_GuidId");
 
             entity.Property(e => e.DatasheetUri).HasMaxLength(150);
             entity.Property(e => e.Description)
-                .HasMaxLength(150)
-                .IsFixedLength();
-            entity.Property(e => e.GuidId).HasDefaultValueSql("(newid())");
+                .HasMaxLength(150);
+            entity.Property(e => e.GuidId).HasDefaultValueSql("gen_random_uuid()");
             entity.Property(e => e.ImageUri).HasMaxLength(150);
             entity.Property(e => e.Number)
-                .HasMaxLength(100)
-                .IsFixedLength();
+                .HasMaxLength(100);
             entity.Property(e => e.Supplier)
                 .HasMaxLength(100)
-                .HasDefaultValueSql("('default')");
+                .HasDefaultValueSql("'default'");
             entity.Property(e => e.SupplierUri).HasMaxLength(150);
             entity.Property(e => e.UserId).HasMaxLength(450);
 
             entity.HasOne(d => d.Category).WithMany(p => p.Parts)
                 .HasForeignKey(d => d.CategoryId)
-                .OnDelete(DeleteBehavior.SetNull)
-                .HasConstraintName("FK_Part_PartCategory");
+                .OnDelete(DeleteBehavior.SetNull);
 
             entity.HasOne(d => d.Package).WithMany(p => p.Parts)
                 .HasForeignKey(d => d.PackageId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Part_PartPackage");
+                .OnDelete(DeleteBehavior.ClientSetNull);
 
             entity.HasOne(d => d.Template).WithMany(p => p.Parts)
                 .HasForeignKey(d => d.TemplateId)
-                .OnDelete(DeleteBehavior.SetNull)
-                .HasConstraintName("FK_Part_PartAttributeTemplate");
+                .OnDelete(DeleteBehavior.SetNull);
 
             entity.HasOne(d => d.User).WithMany(p => p.Parts)
                 .HasForeignKey(d => d.UserId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Part_AspNetUsers");
+                .OnDelete(DeleteBehavior.ClientSetNull);
 
             entity.HasMany(d => d.Groups).WithMany(p => p.Parts)
                 .UsingEntity<Dictionary<string, object>>(
                     "PartGroupAssociation",
                     r => r.HasOne<PartGroup>().WithMany()
                         .HasForeignKey("GroupId")
-                        .OnDelete(DeleteBehavior.ClientSetNull)
-                        .HasConstraintName("FK_Part_PartGroup_PartGroup"),
+                        .OnDelete(DeleteBehavior.ClientSetNull),
                     l => l.HasOne<Part>().WithMany()
                         .HasForeignKey("PartId")
-                        .OnDelete(DeleteBehavior.ClientSetNull)
-                        .HasConstraintName("FK_Part_PartGroup_Part"),
+                        .OnDelete(DeleteBehavior.ClientSetNull),
                     j =>
                     {
-                        j.HasKey("PartId", "GroupId").HasName("PK_Part_PartGroup");
+                        j.HasKey("PartId", "GroupId");
                         j.ToTable("PartGroupAssociation");
                     });
         });
@@ -288,13 +258,12 @@ public partial class BintainerDbContext : DbContext
 
             entity.HasIndex(e => e.GuidId, "IDX_PartAttribute_GuidId");
 
-            entity.Property(e => e.GuidId).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.GuidId).HasDefaultValueSql("gen_random_uuid()");
             entity.Property(e => e.Name).HasMaxLength(50);
             entity.Property(e => e.Value).HasMaxLength(150);
 
             entity.HasOne(d => d.Part).WithMany(p => p.PartAttributes)
-                .HasForeignKey(d => d.PartId)
-                .HasConstraintName("FK_PartAttribute_Part");
+                .HasForeignKey(d => d.PartId);
         });
 
         modelBuilder.Entity<PartAttributeDefinition>(entity =>
@@ -303,13 +272,12 @@ public partial class BintainerDbContext : DbContext
 
             entity.HasIndex(e => e.GuidId, "IDX_PartAttributeDefinition_GuidId");
 
-            entity.Property(e => e.GuidId).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.GuidId).HasDefaultValueSql("gen_random_uuid()");
             entity.Property(e => e.Name).HasMaxLength(50);
             entity.Property(e => e.Value).HasMaxLength(150);
 
             entity.HasOne(d => d.Template).WithMany(p => p.PartAttributeDefinitions)
-                .HasForeignKey(d => d.TemplateId)
-                .HasConstraintName("FK_PartAttributeDefinition_PartAttributeTemplate");
+                .HasForeignKey(d => d.TemplateId);
         });
 
         modelBuilder.Entity<PartAttributeTemplate>(entity =>
@@ -318,87 +286,75 @@ public partial class BintainerDbContext : DbContext
 
             entity.HasIndex(e => e.GuidId, "IDX_PartAttributeTemplate_GuidId");
 
-            entity.Property(e => e.GuidId).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.GuidId).HasDefaultValueSql("gen_random_uuid()");
             entity.Property(e => e.TemplateName)
-                .HasMaxLength(50)
-                .IsFixedLength();
+                .HasMaxLength(50);
             entity.Property(e => e.UserId).HasMaxLength(450);
 
             entity.HasOne(d => d.User).WithMany(p => p.PartAttributeTemplates)
                 .HasForeignKey(d => d.UserId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_PartAttributeTemplate_AspNetUsers");
+                .OnDelete(DeleteBehavior.ClientSetNull);
         });
 
         modelBuilder.Entity<PartBinAssociation>(entity =>
         {
-            entity.HasKey(e => new { e.PartId, e.BinId, e.SubspaceId }).HasName("PK_PartBin");
+            entity.HasKey(e => new { e.PartId, e.BinId, e.SubspaceId });
 
             entity.ToTable("PartBinAssociation");
 
             entity.HasOne(d => d.Bin).WithMany(p => p.PartBinAssociations)
                 .HasForeignKey(d => d.BinId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_PartBin_Bin");
+                .OnDelete(DeleteBehavior.ClientSetNull);
 
             entity.HasOne(d => d.Part).WithMany(p => p.PartBinAssociations)
                 .HasForeignKey(d => d.PartId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_PartBin_Component");
+                .OnDelete(DeleteBehavior.ClientSetNull);
 
             entity.HasOne(d => d.Subspace).WithMany(p => p.PartBinAssociations)
                 .HasForeignKey(d => d.SubspaceId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_PartBin_Subspace");
+                .OnDelete(DeleteBehavior.ClientSetNull);
         });
 
         modelBuilder.Entity<PartCategory>(entity =>
         {
             entity.ToTable("PartCategory");
 
-            entity.Property(e => e.GuidId).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.GuidId).HasDefaultValueSql("gen_random_uuid()");
             entity.Property(e => e.Name).HasMaxLength(75);
             entity.Property(e => e.UserId).HasMaxLength(450);
 
             entity.HasOne(d => d.ParentCategory).WithMany(p => p.InverseParentCategory)
-                .HasForeignKey(d => d.ParentCategoryId)
-                .HasConstraintName("FK_PartCategory_ParentCategory");
+                .HasForeignKey(d => d.ParentCategoryId);
 
             entity.HasOne(d => d.User).WithMany(p => p.PartCategories)
                 .HasForeignKey(d => d.UserId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_PartCategory_AspNetUsers");
+                .OnDelete(DeleteBehavior.ClientSetNull);
         });
 
         modelBuilder.Entity<PartGroup>(entity =>
         {
             entity.ToTable("PartGroup");
 
-            entity.Property(e => e.GuidId).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.GuidId).HasDefaultValueSql("gen_random_uuid()");
             entity.Property(e => e.Name).HasMaxLength(150);
             entity.Property(e => e.UserId).HasMaxLength(450);
 
             entity.HasOne(d => d.User).WithMany(p => p.PartGroups)
                 .HasForeignKey(d => d.UserId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_PartGroup_AspNetUsers");
+                .OnDelete(DeleteBehavior.ClientSetNull);
         });
 
         modelBuilder.Entity<PartLabel>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__PartLabe__3214EC07F4F58D00");
-
             entity.ToTable("PartLabel");
 
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.Value)
-                .HasMaxLength(50)
-                .IsFixedLength();
+                .HasMaxLength(50);
 
             entity.HasOne(d => d.Part).WithMany(p => p.PartLabels)
                 .HasForeignKey(d => d.PartId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_PartLabel_Part");
+                .OnDelete(DeleteBehavior.ClientSetNull);
         });
 
         modelBuilder.Entity<PartPackage>(entity =>
@@ -408,15 +364,13 @@ public partial class BintainerDbContext : DbContext
             entity.Property(e => e.FullFileName).HasMaxLength(250);
             entity.Property(e => e.Name)
                 .HasMaxLength(100)
-                .HasDefaultValueSql("('undefined')")
-                .IsFixedLength();
+                .HasDefaultValueSql("'undefined'");
             entity.Property(e => e.Url).HasMaxLength(250);
             entity.Property(e => e.UserId).HasMaxLength(450);
 
             entity.HasOne(d => d.User).WithMany(p => p.PartPackages)
                 .HasForeignKey(d => d.UserId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_PartPackage_AspNetUsers");
+                .OnDelete(DeleteBehavior.ClientSetNull);
         });
 
         OnModelCreatingPartial(modelBuilder);

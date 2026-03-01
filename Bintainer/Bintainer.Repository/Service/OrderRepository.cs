@@ -1,5 +1,4 @@
-﻿using Azure.Core;
-using Bintainer.Model;
+﻿using Bintainer.Model;
 using Bintainer.Model.DTO;
 using Bintainer.Model.Entity;
 using Bintainer.Model.Request;

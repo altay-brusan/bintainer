@@ -36,9 +36,13 @@ namespace Bintainer.Service
         {
             try
             {
+                var validationError = ValidateBinCoordinates(bin);
+                if (validationError != null)
+                    return validationError;
+
                 _binRepository.UpdateBin(bin);
 
-                return new Response<Bin>() 
+                return new Response<Bin>()
                 {
                     IsSuccess = true,
                     Result = bin
@@ -55,19 +59,23 @@ namespace Bintainer.Service
                     Message = ex.Message
                 };
             }
-            
+
         }
 
         public Response<Bin> SaveBin(Bin bin)
         {
             try
             {
+                var validationError = ValidateBinCoordinates(bin);
+                if (validationError != null)
+                    return validationError;
+
                 _binRepository.SaveBin(bin);
 
-                return new Response<Bin>() 
-                { 
-                    IsSuccess = true, 
-                    Result = bin 
+                return new Response<Bin>()
+                {
+                    IsSuccess = true,
+                    Result = bin
                 };
             }
             catch (Exception ex)
@@ -80,6 +88,28 @@ namespace Bintainer.Service
                     Message = ex.Message
                 };
             }
+        }
+
+        private Response<Bin>? ValidateBinCoordinates(Bin bin)
+        {
+            if (bin.SectionId == null)
+                return null;
+
+            var section = _inventoryRepository.GetSectionById(bin.SectionId.Value);
+            if (section == null)
+                return null;
+
+            if (bin.CoordinateX < 0 || bin.CoordinateX > section.Width ||
+                bin.CoordinateY < 0 || bin.CoordinateY > section.Height)
+            {
+                return new Response<Bin>()
+                {
+                    IsSuccess = false,
+                    Message = "Bin coordinates must be within the bounds of the corresponding inventory section."
+                };
+            }
+
+            return null;
         }
 
         public Response<Dictionary<int,int>?> DistributeQuantityAcrossSubspaces(in Bin bin, int totalQuantity)

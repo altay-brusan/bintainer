@@ -28,8 +28,7 @@ Bintainer.sln
 ├── Bintainer.Repository     (.NET 7.0) - DbContexts, repositories, EF migrations
 ├── Bintainer.Service        (.NET 7.0) - Business logic, AutoMapper profile
 ├── Bintainer.WebApp         (.NET 7.0) - Razor Pages UI, Program.cs (DI root)
-├── Bintainer.Test           (.NET 7.0) - NUnit + Moq tests
-└── Bintainer.Db             (SSDT)     - SQL Server database project
+└── Bintainer.Test           (.NET 7.0) - NUnit + Moq tests
 ```
 
 **Dependency flow:** WebApp → Service → Repository → Model. SharedResources is referenced by WebApp and Service.
@@ -44,7 +43,7 @@ Bintainer.sln
 
 ## Database
 
-- **SQL Server LocalDB** — instance `(localdb)\ProjectModels`, database name **`EtrekDb`**.
+- **PostgreSQL** — database name **`EtrekDb`**, using `Npgsql.EntityFrameworkCore.PostgreSQL` provider.
 - Connection string in `appsettings.json` under `ConnectionStrings:DefaultConnection`.
 - **Two DbContexts** in `Bintainer.Repository/`:
   - `BintainerDbContext` (extends `DbContext`) — domain entities (Bins, Parts, Orders, Inventories, etc.)

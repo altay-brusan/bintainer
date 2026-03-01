@@ -44,6 +44,12 @@ namespace Bintainer.Repository.Service
                              .FirstOrDefault();
         }
 
+        public InventorySection? GetSectionById(int sectionId)
+        {
+            return _dbContext.InventorySections
+                             .FirstOrDefault(s => s.Id == sectionId);
+        }
+
         public List<InventorySection>? GetAllInventorySections(int inventoryId)
         {
             return _dbContext.InventorySections.Where(s => s.InventoryId == inventoryId).ToList();
