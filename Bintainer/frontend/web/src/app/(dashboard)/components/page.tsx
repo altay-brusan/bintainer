@@ -5,14 +5,8 @@ import { Search, Plus, Pencil, Trash2, ArrowRightLeft, Filter } from "lucide-rea
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { TableBody, TableCell, TableRow } from "@/components/ui/table";
+import { ResizableTable, type ColumnDef } from "@/components/ui/resizable-table";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,6 +14,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { demoComponents, categories } from "@/lib/demo-data";
+import { AddComponentDialog } from "@/components/add-component-dialog";
+
+const columns: ColumnDef[] = [
+  { key: "component", label: "Component", defaultWidth: 180, minWidth: 120 },
+  { key: "category", label: "Category", defaultWidth: 150, minWidth: 100 },
+  { key: "storageUnit", label: "Storage Unit", defaultWidth: 150, minWidth: 100 },
+  { key: "bin", label: "Bin", defaultWidth: 110, minWidth: 70 },
+  { key: "compartment", label: "Compartment", defaultWidth: 120, minWidth: 70 },
+  { key: "quantity", label: "Quantity", defaultWidth: 120, minWidth: 80 },
+  { key: "actions", label: "", defaultWidth: 60, minWidth: 50, resizable: false },
+];
 
 export default function ComponentsPage() {
   const [search, setSearch] = useState("");
@@ -47,10 +52,7 @@ export default function ComponentsPage() {
             Manage all your components ({demoComponents.length} total)
           </p>
         </div>
-        <Button className="gap-2">
-          <Plus className="h-4 w-4" />
-          Add Component
-        </Button>
+        <AddComponentDialog />
       </div>
 
       {/* Search & Filters */}
@@ -93,73 +95,64 @@ export default function ComponentsPage() {
 
       {/* Components Table */}
       <div className="rounded-xl border bg-card shadow-sm">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Component</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Storage Unit</TableHead>
-              <TableHead>Bin</TableHead>
-              <TableHead>Compartment</TableHead>
-              <TableHead className="text-right">Quantity</TableHead>
-              <TableHead className="w-[80px]" />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filtered.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
-                  No components found.
-                </TableCell>
-              </TableRow>
-            ) : (
-              filtered.map((comp) => {
-                const isLow = comp.quantity <= comp.lowStockThreshold;
-                return (
-                  <TableRow key={comp.id}>
-                    <TableCell className="font-medium">{comp.name}</TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">{comp.category}</Badge>
-                    </TableCell>
-                    <TableCell>{comp.storageUnit}</TableCell>
-                    <TableCell className="font-mono text-sm">{comp.bin}</TableCell>
-                    <TableCell className="font-mono text-sm">{comp.compartment}</TableCell>
-                    <TableCell className="text-right">
-                      <span className={isLow ? "font-semibold text-destructive" : ""}>
-                        {comp.quantity}
-                      </span>
-                      {isLow && (
-                        <Badge variant="destructive" className="ml-2 text-xs">
-                          Low
-                        </Badge>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <Pencil className="h-3.5 w-3.5" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem>
-                            <Pencil className="mr-2 h-3.5 w-3.5" /> Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <ArrowRightLeft className="mr-2 h-3.5 w-3.5" /> Move
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive">
-                            <Trash2 className="mr-2 h-3.5 w-3.5" /> Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
+        <ResizableTable columns={columns}>
+          {() => (
+            <TableBody>
+              {filtered.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
+                    No components found.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filtered.map((comp) => {
+                  const isLow = comp.quantity <= comp.lowStockThreshold;
+                  return (
+                    <TableRow key={comp.id}>
+                      <TableCell className="font-medium truncate">{comp.name}</TableCell>
+                      <TableCell className="truncate">
+                        <Badge variant="secondary">{comp.category}</Badge>
+                      </TableCell>
+                      <TableCell className="truncate">{comp.storageUnit}</TableCell>
+                      <TableCell className="font-mono text-sm">{comp.bin}</TableCell>
+                      <TableCell className="font-mono text-sm">{comp.compartment}</TableCell>
+                      <TableCell>
+                        <span className={isLow ? "font-semibold text-destructive" : ""}>
+                          {comp.quantity}
+                        </span>
+                        {isLow && (
+                          <Badge variant="destructive" className="ml-2 text-xs">
+                            Low
+                          </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <Pencil className="h-3.5 w-3.5" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem>
+                              <Pencil className="mr-2 h-3.5 w-3.5" /> Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <ArrowRightLeft className="mr-2 h-3.5 w-3.5" /> Move
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="text-destructive">
+                              <Trash2 className="mr-2 h-3.5 w-3.5" /> Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
+            </TableBody>
+          )}
+        </ResizableTable>
       </div>
     </div>
   );

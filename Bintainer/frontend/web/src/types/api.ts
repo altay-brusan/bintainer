@@ -41,3 +41,25 @@ export interface Compartment {
   index: number;
   label: string;
 }
+
+export interface PartAttribute {
+  title: string;
+  value: string;
+}
+
+export interface Part {
+  id: string;
+  partNumber: string;
+  manufacturerPartNumber: string;
+  description: string;
+  imageUrl: string;
+  manufacturer?: string;
+  detailedDescription?: string;
+  footprint?: string;
+  category?: string;
+  url?: string;
+  binLabel?: string;
+  quantity: number;
+  lowStockThreshold: number;
+  attributes: PartAttribute[];
+}
