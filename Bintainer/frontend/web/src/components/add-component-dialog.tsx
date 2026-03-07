@@ -149,6 +149,7 @@ export function AddComponentDialog({ trigger }: AddComponentDialogProps) {
   const [url, setUrl] = useState("");
   const [binLabel, setBinLabel] = useState("");
   const [quantity, setQuantity] = useState(0);
+  const [unitPrice, setUnitPrice] = useState("");
   const [lowStockThreshold, setLowStockThreshold] = useState(0);
 
   // Tags
@@ -216,6 +217,7 @@ export function AddComponentDialog({ trigger }: AddComponentDialogProps) {
     setUrl("");
     setBinLabel("");
     setQuantity(0);
+    setUnitPrice("");
     setLowStockThreshold(0);
     setTags([]);
     setTagInput("");
@@ -552,7 +554,7 @@ export function AddComponentDialog({ trigger }: AddComponentDialogProps) {
                 Storage
               </h3>
 
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-4 gap-3">
                 <div>
                   <Label className="text-xs">Bin Label</Label>
                   <Input
@@ -572,6 +574,18 @@ export function AddComponentDialog({ trigger }: AddComponentDialogProps) {
                     min={0}
                     value={quantity}
                     onChange={(e) => setQuantity(Number(e.target.value))}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Unit Price ($)</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    step="0.001"
+                    placeholder="0.00"
+                    value={unitPrice}
+                    onChange={(e) => setUnitPrice(e.target.value)}
                     className="mt-1"
                   />
                 </div>

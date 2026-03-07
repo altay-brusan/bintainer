@@ -148,6 +148,7 @@ export function EditComponentDialog({
   const [url, setUrl] = useState("");
   const [binLabel, setBinLabel] = useState("");
   const [quantity, setQuantity] = useState(0);
+  const [unitPrice, setUnitPrice] = useState("");
   const [lowStockThreshold, setLowStockThreshold] = useState(0);
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
@@ -166,6 +167,7 @@ export function EditComponentDialog({
     setFootprint(component.package ?? "");
     setBinLabel(component.bin);
     setQuantity(component.quantity);
+    setUnitPrice(component.unitPrice != null ? String(component.unitPrice) : "");
     setLowStockThreshold(component.lowStockThreshold);
     setUrl(component.datasheetUrl ?? "");
     setManufacturer("");
@@ -471,7 +473,7 @@ export function EditComponentDialog({
                 Storage
               </h3>
 
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-4 gap-3">
                 <div>
                   <Label className="text-xs">Bin Label</Label>
                   <Input
@@ -491,6 +493,18 @@ export function EditComponentDialog({
                     min={0}
                     value={quantity}
                     onChange={(e) => setQuantity(Number(e.target.value))}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Unit Price ($)</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    step="0.001"
+                    placeholder="0.00"
+                    value={unitPrice}
+                    onChange={(e) => setUnitPrice(e.target.value)}
                     className="mt-1"
                   />
                 </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Search, Plus, Pencil, Trash2, ArrowRightLeft, Filter, Tag, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Plus, Pencil, Trash2, ArrowRightLeft, Filter, Tag, X, ChevronLeft, ChevronRight, FileSpreadsheet, Globe, ChevronDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,9 +14,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { demoComponents, categories, type Component } from "@/lib/demo-data";
+import { useCurrency } from "@/lib/currency";
 import { AddComponentDialog } from "@/components/add-component-dialog";
 import { EditComponentDialog } from "@/components/edit-component-dialog";
 import { MoveComponentDialog } from "@/components/move-component-dialog";
+import { ImportBomDialog } from "@/components/import-bom-dialog";
+import { ImportSupplierDialog } from "@/components/import-supplier-dialog";
 
 const tagColors = [
   "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
@@ -45,6 +48,8 @@ function getTagColor(tag: string): string {
 
 const columns: ColumnDef[] = [
   { key: "component", label: "Component", defaultWidth: 160, minWidth: 120 },
+  { key: "partNumber", label: "Part Number", defaultWidth: 160, minWidth: 100 },
+  { key: "unitPrice", label: "Unit Price", defaultWidth: 90, minWidth: 70 },
   { key: "category", label: "Category", defaultWidth: 130, minWidth: 100 },
   { key: "tags", label: "Tags", defaultWidth: 160, minWidth: 100 },
   { key: "storageUnit", label: "Storage Unit", defaultWidth: 130, minWidth: 100 },
@@ -61,6 +66,9 @@ export default function ComponentsPage() {
   const [lowStockOnly, setLowStockOnly] = useState(false);
   const [editComponent, setEditComponent] = useState<Component | null>(null);
   const [moveComponent, setMoveComponent] = useState<Component | null>(null);
+  const [importBomOpen, setImportBomOpen] = useState(false);
+  const [importSupplierOpen, setImportSupplierOpen] = useState(false);
+  const { format: formatPrice } = useCurrency();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
@@ -78,6 +86,7 @@ export default function ComponentsPage() {
       const matchesSearch =
         !search ||
         c.name.toLowerCase().includes(q) ||
+        (c.partNumber ?? "").toLowerCase().includes(q) ||
         c.category.toLowerCase().includes(q) ||
         (c.tags ?? []).some((t) => t.toLowerCase().includes(q));
       const matchesCategory = !categoryFilter || c.category === categoryFilter;
@@ -107,7 +116,27 @@ export default function ComponentsPage() {
             Manage all your components ({demoComponents.length} total)
           </p>
         </div>
-        <AddComponentDialog />
+        <div className="flex items-center gap-2">
+          <AddComponentDialog />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="gap-2">
+                Import
+                <ChevronDown className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setImportBomOpen(true)}>
+                <FileSpreadsheet className="mr-2 h-4 w-4" />
+                Import from Excel / BOM
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setImportSupplierOpen(true)}>
+                <Globe className="mr-2 h-4 w-4" />
+                Import from Supplier
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
       {/* Search & Filters */}
@@ -179,7 +208,7 @@ export default function ComponentsPage() {
             <TableBody>
               {paginatedData.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
+                  <TableCell colSpan={10} className="h-24 text-center text-muted-foreground">
                     No components found.
                   </TableCell>
                 </TableRow>
@@ -189,6 +218,8 @@ export default function ComponentsPage() {
                   return (
                     <TableRow key={comp.id}>
                       <TableCell className="font-medium truncate text-[0.9rem]">{comp.name}</TableCell>
+                      <TableCell className="font-mono truncate text-[0.85rem] text-muted-foreground">{comp.partNumber ?? "—"}</TableCell>
+                      <TableCell className="font-mono text-[0.85rem]">{comp.unitPrice != null ? formatPrice(comp.unitPrice) : "—"}</TableCell>
                       <TableCell className="truncate">
                         <Badge variant="secondary">{comp.category}</Badge>
                       </TableCell>
@@ -313,6 +344,14 @@ export default function ComponentsPage() {
         component={moveComponent}
         open={!!moveComponent}
         onOpenChange={(open) => { if (!open) setMoveComponent(null); }}
+      />
+      <ImportBomDialog
+        open={importBomOpen}
+        onOpenChange={setImportBomOpen}
+      />
+      <ImportSupplierDialog
+        open={importSupplierOpen}
+        onOpenChange={setImportSupplierOpen}
       />
     </div>
   );

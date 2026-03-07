@@ -1,6 +1,6 @@
 "use client";
 
-import { User, Sliders, Tag, Download } from "lucide-react";
+import { User, Sliders, Tag, Download, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,9 +8,18 @@ import { useAuth } from "@/lib/auth";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { categories } from "@/lib/demo-data";
 import { Badge } from "@/components/ui/badge";
+import { useCurrency, CURRENCIES } from "@/lib/currency";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function SettingsPage() {
   const { user } = useAuth();
+  const { currency, setCurrencyCode } = useCurrency();
 
   return (
     <div className="space-y-6">
@@ -59,6 +68,38 @@ export default function SettingsPage() {
               </div>
               <ThemeToggle />
             </div>
+          </div>
+        </div>
+
+        {/* Currency */}
+        <div className="rounded-xl border bg-card p-5 shadow-sm">
+          <h3 className="mb-4 flex items-center gap-2 font-semibold">
+            <DollarSign className="h-4 w-4" /> Currency
+          </h3>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between rounded-lg border bg-background p-3">
+              <div>
+                <p className="font-medium">Price Currency</p>
+                <p className="text-sm text-muted-foreground">
+                  Used for unit prices, reports, and exports
+                </p>
+              </div>
+              <Select value={currency.code} onValueChange={setCurrencyCode}>
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {CURRENCIES.map((c) => (
+                    <SelectItem key={c.code} value={c.code}>
+                      {c.symbol} {c.code} — {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Currently displaying prices as: {currency.symbol}1,234.56 ({currency.code})
+            </p>
           </div>
         </div>
 

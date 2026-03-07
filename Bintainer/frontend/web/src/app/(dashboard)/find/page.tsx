@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, lazy, Suspense } from "react";
+import { useState, useMemo, useEffect, lazy, Suspense } from "react";
 import {
   Search,
   SlidersHorizontal,
@@ -89,6 +89,7 @@ export default function FindComponentPage() {
       const matchesSearch =
         !search.trim() ||
         c.name.toLowerCase().includes(q) ||
+        (c.partNumber ?? "").toLowerCase().includes(q) ||
         c.category.toLowerCase().includes(q) ||
         c.bin.toLowerCase().includes(q) ||
         (c.tags ?? []).some((t) => t.toLowerCase().includes(q)) ||
@@ -146,7 +147,7 @@ export default function FindComponentPage() {
   };
 
   // Auto-expand all groups when results change
-  useMemo(() => {
+  useEffect(() => {
     setExpandedUnits(new Set(locationGroups.map((g) => g.storageUnitName)));
   }, [locationGroups]);
 
@@ -335,7 +336,11 @@ export default function FindComponentPage() {
                         </div>
 
                         {/* Location details */}
-                        <div className="flex gap-3 text-sm">
+                        <div className="flex flex-wrap gap-2 text-sm">
+                          <div className="rounded-md bg-primary/10 px-2.5 py-1">
+                            <span className="text-muted-foreground">Unit </span>
+                            <span className="font-semibold text-primary">{comp.storageUnit}</span>
+                          </div>
                           <div className="rounded-md bg-muted px-2.5 py-1">
                             <span className="text-muted-foreground">Bin </span>
                             <span className="font-mono font-semibold">{comp.bin}</span>
