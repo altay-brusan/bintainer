@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueries, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/api";
 import type { StorageUnitSummary, StorageUnitDetail } from "@/types/api";
 import type { CreateStorageUnitInput, UpdateStorageUnitInput } from "@/lib/validators";
@@ -16,6 +16,28 @@ export function useStorageUnits(inventoryId: string) {
     },
     enabled: !!inventoryId,
   });
+}
+
+export function useAllStorageUnits(inventoryIds: string[]) {
+  const queries = useQueries({
+    queries: inventoryIds.map((id) => ({
+      queryKey: ["storage-units", id],
+      queryFn: async () => {
+        const { data } = await api.get<StorageUnitSummary[]>(
+          `/api/inventories/${id}/storage-units`
+        );
+        return data;
+      },
+      enabled: !!id,
+    })),
+  });
+
+  const isLoading = queries.some((q) => q.isLoading);
+  const data = queries
+    .filter((q) => q.data)
+    .flatMap((q) => q.data!);
+
+  return { data: inventoryIds.length === 0 ? undefined : data, isLoading };
 }
 
 export function useStorageUnit(id: string) {

@@ -1,8 +1,8 @@
-export default function StorageUnitDetailPage() {
+export default function ComponentsPage() {
   return (
     <div>
-      <h1 className="text-2xl font-bold">Storage Unit Editor</h1>
-      <p className="text-muted-foreground">Configure your storage unit grid</p>
+      <h1 className="text-2xl font-bold">Components</h1>
+      <p className="text-muted-foreground">Manage all your components</p>
       <div className="mt-8 rounded-xl border border-dashed bg-card p-12 text-center">
         <p className="text-muted-foreground">Coming soon</p>
       </div>

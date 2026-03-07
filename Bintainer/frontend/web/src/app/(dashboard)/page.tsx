@@ -1,127 +1,150 @@
 "use client";
 
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus } from "lucide-react";
-import { toast } from "sonner";
-import { useInventories, useCreateInventory } from "@/hooks/use-inventories";
 import {
-  createInventorySchema,
-  type CreateInventoryInput,
-} from "@/lib/validators";
-import { InventoryCard } from "@/components/inventory-card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+  Cpu,
+  Archive,
+  Grid3x3,
+  Layers,
+  AlertTriangle,
+} from "lucide-react";
+import { SummaryCard } from "@/components/dashboard/summary-card";
+import { QuickActions } from "@/components/dashboard/quick-actions";
+import { StorageUnitPreview } from "@/components/dashboard/storage-unit-preview";
+import { StorageUnitDetailCard } from "@/components/dashboard/storage-unit-detail-card";
+import { RecentActivity } from "@/components/dashboard/recent-activity";
+import { useInventories } from "@/hooks/use-inventories";
+import { useAllStorageUnits } from "@/hooks/use-storage-units";
 import { Skeleton } from "@/components/ui/skeleton";
 
+const colorSchemes = ["blue", "amber", "emerald", "red", "purple"] as const;
+
 export default function DashboardPage() {
-  const { data: inventories, isLoading } = useInventories();
-  const createInventory = useCreateInventory();
-  const [open, setOpen] = useState(false);
+  const { data: inventories, isLoading: inventoriesLoading } = useInventories();
+  const { data: storageUnits, isLoading: storageUnitsLoading } = useAllStorageUnits(
+    inventories?.map((i) => i.id) ?? []
+  );
 
-  const form = useForm<CreateInventoryInput>({
-    resolver: zodResolver(createInventorySchema),
-    defaultValues: { name: "" },
-  });
+  const isLoading = inventoriesLoading || storageUnitsLoading;
 
-  const onSubmit = async (values: CreateInventoryInput) => {
-    try {
-      await createInventory.mutateAsync(values);
-      toast.success("Inventory created");
-      form.reset();
-      setOpen(false);
-    } catch {
-      toast.error("Failed to create inventory");
-    }
-  };
+  const totalBins = storageUnits?.reduce((sum, su) => sum + su.rows * su.columns, 0) ?? 0;
+  const totalCompartments = storageUnits?.reduce((sum, su) => sum + su.compartmentCount, 0) ?? 0;
 
   return (
-    <div>
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Inventories</h1>
-          <p className="text-muted-foreground">
-            Manage your storage inventories
-          </p>
-        </div>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Create Inventory
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create Inventory</DialogTitle>
-            </DialogHeader>
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-4"
-              >
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="My Inventory" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={createInventory.isPending}
-                >
-                  {createInventory.isPending ? "Creating..." : "Create"}
-                </Button>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-2xl font-bold">Dashboard</h1>
+        <p className="text-muted-foreground">Overview of your inventory</p>
       </div>
 
-      {isLoading ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-24 rounded-lg" />
-          ))}
+      {/* Summary Cards */}
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
+        {isLoading ? (
+          Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton key={i} className="h-20 rounded-xl" />
+          ))
+        ) : (
+          <>
+            <SummaryCard
+              title="Total Components"
+              value={totalCompartments}
+              icon={Cpu}
+              iconClassName="bg-primary/10 text-primary"
+            />
+            <SummaryCard
+              title="Storage Units"
+              value={storageUnits?.length ?? 0}
+              icon={Archive}
+              iconClassName="bg-amber-100 text-amber-600 dark:bg-amber-900/50 dark:text-amber-400"
+            />
+            <SummaryCard
+              title="Total Bins"
+              value={totalBins}
+              icon={Grid3x3}
+              iconClassName="bg-emerald-100 text-emerald-600 dark:bg-emerald-900/50 dark:text-emerald-400"
+            />
+            <SummaryCard
+              title="Compartments"
+              value={totalCompartments}
+              icon={Layers}
+              iconClassName="bg-purple-100 text-purple-600 dark:bg-purple-900/50 dark:text-purple-400"
+            />
+            <SummaryCard
+              title="Low Stock"
+              value={0}
+              icon={AlertTriangle}
+              iconClassName="bg-red-100 text-red-600 dark:bg-red-900/50 dark:text-red-400"
+            />
+          </>
+        )}
+      </div>
+
+      {/* Quick Actions */}
+      <div>
+        <h2 className="mb-3 text-lg font-semibold">Quick Actions</h2>
+        <QuickActions />
+      </div>
+
+      {/* Storage Units + Recent Activity */}
+      <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
+        <div className="space-y-6">
+          {/* Storage Unit Preview Cards */}
+          <div>
+            <h2 className="mb-3 text-lg font-semibold">Storage Units</h2>
+            {isLoading ? (
+              <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Skeleton key={i} className="h-36 rounded-xl" />
+                ))}
+              </div>
+            ) : storageUnits && storageUnits.length > 0 ? (
+              <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+                {storageUnits.map((su, i) => (
+                  <StorageUnitPreview
+                    key={su.id}
+                    id={su.id}
+                    name={su.name}
+                    rows={su.rows}
+                    columns={su.columns}
+                    bins={su.rows * su.columns}
+                    components={su.compartmentCount}
+                    colorScheme={colorSchemes[i % colorSchemes.length]}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-xl border border-dashed bg-card p-8 text-center">
+                <p className="text-muted-foreground">No storage units yet. Create one to get started.</p>
+              </div>
+            )}
+          </div>
+
+          {/* Storage Unit Detail Cards */}
+          {storageUnits && storageUnits.length > 0 && (
+            <div>
+              <h2 className="mb-3 text-lg font-semibold">Storage Units</h2>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+                {storageUnits.map((su, i) => (
+                  <StorageUnitDetailCard
+                    key={su.id}
+                    id={su.id}
+                    name={su.name}
+                    rows={su.rows}
+                    columns={su.columns}
+                    bins={su.rows * su.columns}
+                    components={su.compartmentCount}
+                    colorScheme={colorSchemes[i % colorSchemes.length]}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
-      ) : inventories && inventories.length > 0 ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {inventories.map((inventory) => (
-            <InventoryCard key={inventory.id} inventory={inventory} />
-          ))}
+
+        {/* Recent Activity Sidebar */}
+        <div>
+          <RecentActivity />
         </div>
-      ) : (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-12 text-center">
-          <p className="text-lg font-medium">No inventories yet</p>
-          <p className="text-sm text-muted-foreground">
-            Create your first inventory to get started
-          </p>
-        </div>
-      )}
+      </div>
     </div>
   );
 }
