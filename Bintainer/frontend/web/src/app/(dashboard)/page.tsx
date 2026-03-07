@@ -12,22 +12,15 @@ import { QuickActions } from "@/components/dashboard/quick-actions";
 import { StorageUnitPreview } from "@/components/dashboard/storage-unit-preview";
 import { StorageUnitDetailCard } from "@/components/dashboard/storage-unit-detail-card";
 import { RecentActivity } from "@/components/dashboard/recent-activity";
-import { useInventories } from "@/hooks/use-inventories";
-import { useAllStorageUnits } from "@/hooks/use-storage-units";
-import { Skeleton } from "@/components/ui/skeleton";
+import { demoStorageUnits, demoComponents } from "@/lib/demo-data";
 
 const colorSchemes = ["blue", "amber", "emerald", "red", "purple"] as const;
 
 export default function DashboardPage() {
-  const { data: inventories, isLoading: inventoriesLoading } = useInventories();
-  const { data: storageUnits, isLoading: storageUnitsLoading } = useAllStorageUnits(
-    inventories?.map((i) => i.id) ?? []
-  );
-
-  const isLoading = inventoriesLoading || storageUnitsLoading;
-
-  const totalBins = storageUnits?.reduce((sum, su) => sum + su.rows * su.columns, 0) ?? 0;
-  const totalCompartments = storageUnits?.reduce((sum, su) => sum + su.compartmentCount, 0) ?? 0;
+  const storageUnits = demoStorageUnits;
+  const totalBins = storageUnits.reduce((sum, su) => sum + su.rows * su.columns, 0);
+  const totalComponents = demoComponents.reduce((sum, c) => sum + c.quantity, 0);
+  const lowStock = demoComponents.filter((c) => c.quantity <= c.lowStockThreshold).length;
 
   return (
     <div className="space-y-8">
@@ -38,44 +31,36 @@ export default function DashboardPage() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
-        {isLoading ? (
-          Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-20 rounded-xl" />
-          ))
-        ) : (
-          <>
-            <SummaryCard
-              title="Total Components"
-              value={totalCompartments}
-              icon={Cpu}
-              iconClassName="bg-primary/10 text-primary"
-            />
-            <SummaryCard
-              title="Storage Units"
-              value={storageUnits?.length ?? 0}
-              icon={Archive}
-              iconClassName="bg-amber-100 text-amber-600 dark:bg-amber-900/50 dark:text-amber-400"
-            />
-            <SummaryCard
-              title="Total Bins"
-              value={totalBins}
-              icon={Grid3x3}
-              iconClassName="bg-emerald-100 text-emerald-600 dark:bg-emerald-900/50 dark:text-emerald-400"
-            />
-            <SummaryCard
-              title="Compartments"
-              value={totalCompartments}
-              icon={Layers}
-              iconClassName="bg-purple-100 text-purple-600 dark:bg-purple-900/50 dark:text-purple-400"
-            />
-            <SummaryCard
-              title="Low Stock"
-              value={0}
-              icon={AlertTriangle}
-              iconClassName="bg-red-100 text-red-600 dark:bg-red-900/50 dark:text-red-400"
-            />
-          </>
-        )}
+        <SummaryCard
+          title="Total Components"
+          value={totalComponents.toLocaleString()}
+          icon={Cpu}
+          iconClassName="bg-primary/10 text-primary"
+        />
+        <SummaryCard
+          title="Storage Units"
+          value={storageUnits.length}
+          icon={Archive}
+          iconClassName="bg-amber-100 text-amber-600 dark:bg-amber-900/50 dark:text-amber-400"
+        />
+        <SummaryCard
+          title="Total Bins"
+          value={totalBins}
+          icon={Grid3x3}
+          iconClassName="bg-emerald-100 text-emerald-600 dark:bg-emerald-900/50 dark:text-emerald-400"
+        />
+        <SummaryCard
+          title="Compartments"
+          value={storageUnits.reduce((sum, su) => sum + su.compartmentCount, 0)}
+          icon={Layers}
+          iconClassName="bg-purple-100 text-purple-600 dark:bg-purple-900/50 dark:text-purple-400"
+        />
+        <SummaryCard
+          title="Low Stock"
+          value={lowStock}
+          icon={AlertTriangle}
+          iconClassName="bg-red-100 text-red-600 dark:bg-red-900/50 dark:text-red-400"
+        />
       </div>
 
       {/* Quick Actions */}
@@ -90,54 +75,40 @@ export default function DashboardPage() {
           {/* Storage Unit Preview Cards */}
           <div>
             <h2 className="mb-3 text-lg font-semibold">Storage Units</h2>
-            {isLoading ? (
-              <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Skeleton key={i} className="h-36 rounded-xl" />
-                ))}
-              </div>
-            ) : storageUnits && storageUnits.length > 0 ? (
-              <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
-                {storageUnits.map((su, i) => (
-                  <StorageUnitPreview
-                    key={su.id}
-                    id={su.id}
-                    name={su.name}
-                    rows={su.rows}
-                    columns={su.columns}
-                    bins={su.rows * su.columns}
-                    components={su.compartmentCount}
-                    colorScheme={colorSchemes[i % colorSchemes.length]}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="rounded-xl border border-dashed bg-card p-8 text-center">
-                <p className="text-muted-foreground">No storage units yet. Create one to get started.</p>
-              </div>
-            )}
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+              {storageUnits.map((su, i) => (
+                <StorageUnitPreview
+                  key={su.id}
+                  id={su.id}
+                  name={su.name}
+                  rows={su.rows}
+                  columns={su.columns}
+                  bins={su.rows * su.columns}
+                  components={su.compartmentCount}
+                  colorScheme={colorSchemes[i % colorSchemes.length]}
+                />
+              ))}
+            </div>
           </div>
 
           {/* Storage Unit Detail Cards */}
-          {storageUnits && storageUnits.length > 0 && (
-            <div>
-              <h2 className="mb-3 text-lg font-semibold">Storage Units</h2>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-                {storageUnits.map((su, i) => (
-                  <StorageUnitDetailCard
-                    key={su.id}
-                    id={su.id}
-                    name={su.name}
-                    rows={su.rows}
-                    columns={su.columns}
-                    bins={su.rows * su.columns}
-                    components={su.compartmentCount}
-                    colorScheme={colorSchemes[i % colorSchemes.length]}
-                  />
-                ))}
-              </div>
+          <div>
+            <h2 className="mb-3 text-lg font-semibold">Storage Units</h2>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+              {storageUnits.map((su, i) => (
+                <StorageUnitDetailCard
+                  key={su.id}
+                  id={su.id}
+                  name={su.name}
+                  rows={su.rows}
+                  columns={su.columns}
+                  bins={su.rows * su.columns}
+                  components={su.compartmentCount}
+                  colorScheme={colorSchemes[i % colorSchemes.length]}
+                />
+              ))}
             </div>
-          )}
+          </div>
         </div>
 
         {/* Recent Activity Sidebar */}
