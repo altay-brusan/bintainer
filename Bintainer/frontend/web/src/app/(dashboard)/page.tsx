@@ -10,7 +10,6 @@ import {
 import { SummaryCard } from "@/components/dashboard/summary-card";
 import { QuickActions } from "@/components/dashboard/quick-actions";
 import { StorageUnitPreview } from "@/components/dashboard/storage-unit-preview";
-import { StorageUnitDetailCard } from "@/components/dashboard/storage-unit-detail-card";
 import { RecentActivity } from "@/components/dashboard/recent-activity";
 import { demoStorageUnits, demoComponents } from "@/lib/demo-data";
 
@@ -91,24 +90,6 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Storage Unit Detail Cards */}
-          <div>
-            <h2 className="mb-3 text-lg font-semibold">Storage Units</h2>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-              {storageUnits.map((su, i) => (
-                <StorageUnitDetailCard
-                  key={su.id}
-                  id={su.id}
-                  name={su.name}
-                  rows={su.rows}
-                  columns={su.columns}
-                  bins={su.rows * su.columns}
-                  components={su.compartmentCount}
-                  colorScheme={colorSchemes[i % colorSchemes.length]}
-                />
-              ))}
-            </div>
-          </div>
         </div>
 
         {/* Recent Activity Sidebar */}

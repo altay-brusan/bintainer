@@ -86,7 +86,7 @@ export function StorageUnitPreview({
           {bins} Bins
         </span>
         <span className={cn("rounded-md px-2 py-1 font-medium", colors.badge)}>
-          {components}
+          {components} Parts
         </span>
       </div>
       <div className="flex flex-col gap-1">

@@ -1,12 +1,13 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import {
   Plus,
   Trash2,
   Link as LinkIcon,
   Package,
   ChevronDown,
+  Pencil,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -19,9 +20,7 @@ import { Separator } from "@/components/ui/separator";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   DropdownMenu,
@@ -34,9 +33,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ComboboxInput } from "@/components/ui/combobox-input";
 import type { PartAttribute } from "@/types/api";
+import type { Component } from "@/lib/demo-data";
 import { toast } from "sonner";
 
-// TODO: fetch from API when backend is ready
 const existingFootprints = [
   "0201", "0402", "0603", "0805", "1206", "1210", "2512",
   "SOT-23", "SOT-223", "SOT-89",
@@ -50,10 +49,6 @@ const existingFootprints = [
   "DIP-8", "DIP-14", "DIP-16", "DIP-28",
   "SMA", "SMB", "SMC",
 ];
-
-interface AddComponentDialogProps {
-  trigger?: React.ReactNode;
-}
 
 const categoryTree = [
   {
@@ -127,20 +122,24 @@ const categoryTree = [
   },
 ];
 
-export function AddComponentDialog({ trigger }: AddComponentDialogProps) {
-  const [open, setOpen] = useState(false);
+interface EditComponentDialogProps {
+  component: Component | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function EditComponentDialog({
+  component,
+  open,
+  onOpenChange,
+}: EditComponentDialogProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Mandatory fields
   const [partNumber, setPartNumber] = useState("");
   const [mfrPartNumber, setMfrPartNumber] = useState("");
   const [description, setDescription] = useState("");
-
-  // Image: local file or preview URL
-  const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-
-  // Optional fields
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [manufacturer, setManufacturer] = useState("");
   const [detailedDescription, setDetailedDescription] = useState("");
   const [footprint, setFootprint] = useState("");
@@ -150,24 +149,42 @@ export function AddComponentDialog({ trigger }: AddComponentDialogProps) {
   const [binLabel, setBinLabel] = useState("");
   const [quantity, setQuantity] = useState(0);
   const [lowStockThreshold, setLowStockThreshold] = useState(0);
-
-  // Tags
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
-
-  // Dynamic attributes
   const [attributes, setAttributes] = useState<PartAttribute[]>([]);
   const [newAttrTitle, setNewAttrTitle] = useState("");
   const [newAttrValue, setNewAttrValue] = useState("");
+
+  // Populate form when component changes
+  useEffect(() => {
+    if (!component) return;
+    setPartNumber(component.name);
+    setMfrPartNumber(component.name);
+    setDescription(component.name);
+    setCategory(component.category);
+    setSupplier(component.supplier ?? "");
+    setFootprint(component.package ?? "");
+    setBinLabel(component.bin);
+    setQuantity(component.quantity);
+    setLowStockThreshold(component.lowStockThreshold);
+    setUrl(component.datasheetUrl ?? "");
+    setManufacturer("");
+    setDetailedDescription("");
+    setImagePreview(null);
+    setImageFile(null);
+    setTags(component.tags ?? []);
+    setTagInput("");
+    setAttributes([]);
+    setNewAttrTitle("");
+    setNewAttrValue("");
+  }, [component]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setImageFile(file);
     const reader = new FileReader();
-    reader.onload = (ev) => {
-      setImagePreview(ev.target?.result as string);
-    };
+    reader.onload = (ev) => setImagePreview(ev.target?.result as string);
     reader.readAsDataURL(file);
   };
 
@@ -202,100 +219,25 @@ export function AddComponentDialog({ trigger }: AddComponentDialogProps) {
     setAttributes((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const resetForm = () => {
-    setPartNumber("");
-    setMfrPartNumber("");
-    setDescription("");
-    setImageFile(null);
-    setImagePreview(null);
-    setManufacturer("");
-    setDetailedDescription("");
-    setFootprint("");
-    setCategory("");
-    setSupplier("");
-    setUrl("");
-    setBinLabel("");
-    setQuantity(0);
-    setLowStockThreshold(0);
-    setTags([]);
-    setTagInput("");
-    setAttributes([]);
-    setNewAttrTitle("");
-    setNewAttrValue("");
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  };
-
-  const handleSubmitAndNext = () => {
-    if (
-      !partNumber.trim() ||
-      !mfrPartNumber.trim() ||
-      !description.trim()
-    ) {
-      toast.error("Please fill in all mandatory fields");
-      return;
-    }
-
-    // TODO: call API when backend is ready
-    console.log("Creating part and continuing...");
-    toast.success("Component created (demo) — ready for next");
-    resetForm();
-  };
-
   const handleSubmit = () => {
-    if (
-      !partNumber.trim() ||
-      !mfrPartNumber.trim() ||
-      !description.trim()
-    ) {
+    if (!partNumber.trim() || !mfrPartNumber.trim() || !description.trim()) {
       toast.error("Please fill in all mandatory fields");
       return;
     }
-
-    // TODO: call API when backend is ready (upload image as FormData)
-    const part = {
-      partNumber: partNumber.trim(),
-      manufacturerPartNumber: mfrPartNumber.trim(),
-      description: description.trim(),
-      imageFile,
-      manufacturer: manufacturer.trim() || undefined,
-      detailedDescription: detailedDescription.trim() || undefined,
-      footprint: footprint.trim() || undefined,
-      category: category.trim() || undefined,
-      supplier: supplier.trim() || undefined,
-      url: url.trim() || undefined,
-      binLabel: binLabel.trim() || undefined,
-      quantity,
-      lowStockThreshold,
-      attributes,
-    };
-    console.log("Creating part:", part);
-    toast.success("Component created (demo)");
-    resetForm();
-    setOpen(false);
+    // TODO: call API
+    console.log("Updating component:", component?.id);
+    toast.success("Component updated (demo)");
+    onOpenChange(false);
   };
 
   const isMandatoryValid =
     partNumber.trim() && mfrPartNumber.trim() && description.trim();
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(v) => {
-        setOpen(v);
-        if (!v) resetForm();
-      }}
-    >
-      <DialogTrigger asChild>
-        {trigger ?? (
-          <Button className="gap-2">
-            <Plus className="h-4 w-4" />
-            Add Component
-          </Button>
-        )}
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-5xl h-[90vh] gap-0 p-0 grid grid-rows-[auto_1fr_auto] overflow-hidden">
         <div className="px-6 pt-6 pb-4">
-          <DialogTitle>Add Component</DialogTitle>
+          <DialogTitle>Edit Component</DialogTitle>
         </div>
 
         <ScrollArea className="overflow-auto">
@@ -307,7 +249,6 @@ export function AddComponentDialog({ trigger }: AddComponentDialogProps) {
               </h3>
 
               <div className="grid grid-cols-[140px_1fr] gap-5 items-start">
-                {/* Image upload */}
                 <div className="space-y-2">
                   <div
                     className="flex h-[140px] w-[140px] cursor-pointer items-center justify-center rounded-lg border-2 border-dashed bg-muted/50 overflow-hidden transition-colors hover:border-primary/50 hover:bg-muted"
@@ -350,9 +291,7 @@ export function AddComponentDialog({ trigger }: AddComponentDialogProps) {
                     </div>
                   )}
                   {!imageFile && (
-                    <p className="text-[11px] text-muted-foreground">
-                      Optional
-                    </p>
+                    <p className="text-[11px] text-muted-foreground">Optional</p>
                   )}
                 </div>
 
@@ -360,8 +299,7 @@ export function AddComponentDialog({ trigger }: AddComponentDialogProps) {
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <Label className="text-xs">
-                        Part Number{" "}
-                        <span className="text-destructive">*</span>
+                        Part Number <span className="text-destructive">*</span>
                       </Label>
                       <Input
                         placeholder="e.g. J50S10K-ND"
@@ -372,8 +310,7 @@ export function AddComponentDialog({ trigger }: AddComponentDialogProps) {
                     </div>
                     <div>
                       <Label className="text-xs">
-                        Manufacturer Part Number{" "}
-                        <span className="text-destructive">*</span>
+                        Manufacturer Part Number <span className="text-destructive">*</span>
                       </Label>
                       <Input
                         placeholder="e.g. J50S 10K"
@@ -397,11 +334,9 @@ export function AddComponentDialog({ trigger }: AddComponentDialogProps) {
                   <div>
                     <Label className="text-xs">Detailed Description</Label>
                     <Textarea
-                      placeholder="e.g. 10k Ohm 1 Gang Linear Servo Mount Potentiometer 1.0 Turns Wirewound 1.5W Solder Turret"
+                      placeholder="e.g. 10k Ohm 1 Gang Linear..."
                       value={detailedDescription}
-                      onChange={(e) =>
-                        setDetailedDescription(e.target.value)
-                      }
+                      onChange={(e) => setDetailedDescription(e.target.value)}
                       className="mt-1"
                       rows={2}
                     />
@@ -445,13 +380,7 @@ export function AddComponentDialog({ trigger }: AddComponentDialogProps) {
                         variant="outline"
                         className="mt-1 w-full justify-between font-normal"
                       >
-                        <span
-                          className={
-                            category
-                              ? "text-foreground"
-                              : "text-muted-foreground"
-                          }
-                        >
+                        <span className={category ? "text-foreground" : "text-muted-foreground"}>
                           {category || "Select category"}
                         </span>
                         <ChevronDown className="h-4 w-4 text-muted-foreground" />
@@ -459,29 +388,19 @@ export function AddComponentDialog({ trigger }: AddComponentDialogProps) {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="w-56">
                       <DropdownMenuItem onClick={() => setCategory("")}>
-                        <span className="text-muted-foreground">
-                          No category
-                        </span>
+                        <span className="text-muted-foreground">No category</span>
                       </DropdownMenuItem>
                       {categoryTree.map((group) => (
                         <DropdownMenuSub key={group.label}>
-                          <DropdownMenuSubTrigger>
-                            {group.label}
-                          </DropdownMenuSubTrigger>
+                          <DropdownMenuSubTrigger>{group.label}</DropdownMenuSubTrigger>
                           <DropdownMenuSubContent>
-                            <DropdownMenuItem
-                              onClick={() => setCategory(group.label)}
-                            >
+                            <DropdownMenuItem onClick={() => setCategory(group.label)}>
                               All {group.label}
                             </DropdownMenuItem>
                             {group.children.map((child) => (
                               <DropdownMenuItem
                                 key={child.label}
-                                onClick={() =>
-                                  setCategory(
-                                    `${group.label} > ${child.label}`
-                                  )
-                                }
+                                onClick={() => setCategory(`${group.label} > ${child.label}`)}
                               >
                                 {child.label}
                               </DropdownMenuItem>
@@ -498,7 +417,7 @@ export function AddComponentDialog({ trigger }: AddComponentDialogProps) {
                     value={footprint}
                     onChange={setFootprint}
                     options={existingFootprints}
-                    placeholder="e.g. 0603, TO-92, LQFP-48"
+                    placeholder="e.g. 0603, TO-92"
                     className="mt-1"
                   />
                 </div>
@@ -581,9 +500,7 @@ export function AddComponentDialog({ trigger }: AddComponentDialogProps) {
                     type="number"
                     min={0}
                     value={lowStockThreshold}
-                    onChange={(e) =>
-                      setLowStockThreshold(Number(e.target.value))
-                    }
+                    onChange={(e) => setLowStockThreshold(Number(e.target.value))}
                     className="mt-1"
                   />
                 </div>
@@ -599,8 +516,7 @@ export function AddComponentDialog({ trigger }: AddComponentDialogProps) {
                   Product Attributes
                 </h3>
                 <span className="text-xs text-muted-foreground">
-                  {attributes.length} attribute
-                  {attributes.length !== 1 ? "s" : ""}
+                  {attributes.length} attribute{attributes.length !== 1 ? "s" : ""}
                 </span>
               </div>
 
@@ -640,10 +556,7 @@ export function AddComponentDialog({ trigger }: AddComponentDialogProps) {
                     onChange={(e) => setNewAttrTitle(e.target.value)}
                     className="mt-1"
                     onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        addAttribute();
-                      }
+                      if (e.key === "Enter") { e.preventDefault(); addAttribute(); }
                     }}
                   />
                 </div>
@@ -655,10 +568,7 @@ export function AddComponentDialog({ trigger }: AddComponentDialogProps) {
                     onChange={(e) => setNewAttrValue(e.target.value)}
                     className="mt-1"
                     onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        addAttribute();
-                      }
+                      if (e.key === "Enter") { e.preventDefault(); addAttribute(); }
                     }}
                   />
                 </div>
@@ -672,14 +582,6 @@ export function AddComponentDialog({ trigger }: AddComponentDialogProps) {
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
-
-              {attributes.length === 0 && (
-                <p className="text-xs text-muted-foreground">
-                  Add custom attributes like Packaging, Tolerance, Power,
-                  Series, etc. These follow DigiKey&apos;s &quot;Product
-                  Attributes&quot; format.
-                </p>
-              )}
             </section>
           </div>
         </ScrollArea>
@@ -688,37 +590,18 @@ export function AddComponentDialog({ trigger }: AddComponentDialogProps) {
         <div className="flex items-center justify-between border-t bg-card px-6 py-5">
           <div className="flex items-center gap-2">
             {!isMandatoryValid && (
-              <Badge
-                variant="secondary"
-                className="text-sm text-muted-foreground"
-              >
-                <span className="text-destructive mr-1">*</span> Required
-                fields missing
+              <Badge variant="secondary" className="text-sm text-muted-foreground">
+                <span className="text-destructive mr-1">*</span> Required fields missing
               </Badge>
             )}
           </div>
           <div className="flex gap-3">
-            <Button
-              variant="outline"
-              size="lg"
-              onClick={() => {
-                resetForm();
-                setOpen(false);
-              }}
-            >
+            <Button variant="outline" size="lg" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button
-              variant="secondary"
-              size="lg"
-              onClick={handleSubmitAndNext}
-              disabled={!isMandatoryValid}
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Create & Add Next
-            </Button>
             <Button size="lg" onClick={handleSubmit} disabled={!isMandatoryValid}>
-              Create Component
+              <Pencil className="mr-2 h-4 w-4" />
+              Save Changes
             </Button>
           </div>
         </div>

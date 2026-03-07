@@ -12,6 +12,7 @@ export interface Component {
   supplier?: string;
   datasheetUrl?: string;
   lowStockThreshold: number;
+  tags?: string[];
 }
 
 export interface MovementRecord {
@@ -33,19 +34,19 @@ export const demoStorageUnits: StorageUnitSummary[] = [
 ];
 
 export const demoComponents: Component[] = [
-  { id: "c-1", name: "10k Resistor", category: "Resistors", storageUnit: "Resistors", bin: "R03-C02", compartment: "P01", quantity: 120, package: "0603", supplier: "Digikey", lowStockThreshold: 20 },
-  { id: "c-2", name: "4.7k Resistor", category: "Resistors", storageUnit: "Resistors", bin: "R03-C03", compartment: "P01", quantity: 85, package: "0603", supplier: "Digikey", lowStockThreshold: 20 },
-  { id: "c-3", name: "1k Resistor", category: "Resistors", storageUnit: "Resistors", bin: "R01-C01", compartment: "P01", quantity: 200, package: "0603", supplier: "Mouser", lowStockThreshold: 30 },
-  { id: "c-4", name: "100nF Capacitor", category: "Capacitors", storageUnit: "Capacitors", bin: "R01-C01", compartment: "P01", quantity: 150, package: "0402", supplier: "Digikey", lowStockThreshold: 25 },
-  { id: "c-5", name: "10uF Capacitor", category: "Capacitors", storageUnit: "Capacitors", bin: "R02-C01", compartment: "P01", quantity: 60, package: "0805", supplier: "Mouser", lowStockThreshold: 15 },
+  { id: "c-1", name: "10k Resistor", category: "Resistors", storageUnit: "Resistors", bin: "R03-C02", compartment: "P01", quantity: 120, package: "0603", supplier: "Digikey", lowStockThreshold: 20, tags: ["smd", "basic"] },
+  { id: "c-2", name: "4.7k Resistor", category: "Resistors", storageUnit: "Resistors", bin: "R03-C03", compartment: "P01", quantity: 85, package: "0603", supplier: "Digikey", lowStockThreshold: 20, tags: ["smd", "basic"] },
+  { id: "c-3", name: "1k Resistor", category: "Resistors", storageUnit: "Resistors", bin: "R01-C01", compartment: "P01", quantity: 200, package: "0603", supplier: "Mouser", lowStockThreshold: 30, tags: ["smd"] },
+  { id: "c-4", name: "100nF Capacitor", category: "Capacitors", storageUnit: "Capacitors", bin: "R01-C01", compartment: "P01", quantity: 150, package: "0402", supplier: "Digikey", lowStockThreshold: 25, tags: ["decoupling", "smd"] },
+  { id: "c-5", name: "10uF Capacitor", category: "Capacitors", storageUnit: "Capacitors", bin: "R02-C01", compartment: "P01", quantity: 60, package: "0805", supplier: "Mouser", lowStockThreshold: 15, tags: ["power"] },
   { id: "c-6", name: "22pF Capacitor", category: "Capacitors", storageUnit: "Capacitors", bin: "R01-C03", compartment: "P01", quantity: 90, package: "0402", supplier: "LCSC", lowStockThreshold: 20 },
-  { id: "c-7", name: "10uH Inductor", category: "Inductors", storageUnit: "Inductors", bin: "R01-C01", compartment: "P01", quantity: 45, package: "0805", supplier: "Digikey", lowStockThreshold: 10 },
-  { id: "c-8", name: "STM32F103", category: "Microcontrollers", storageUnit: "Microcontrollers", bin: "R01-C01", compartment: "P02", quantity: 14, package: "LQFP-48", supplier: "Mouser", lowStockThreshold: 5 },
-  { id: "c-9", name: "ESP32-S3", category: "Microcontrollers", storageUnit: "Microcontrollers", bin: "R01-C02", compartment: "P01", quantity: 8, package: "QFN-56", supplier: "LCSC", lowStockThreshold: 3 },
-  { id: "c-10", name: "2N2222 NPN", category: "Transistors", storageUnit: "Transistors", bin: "R01-C01", compartment: "P01", quantity: 75, package: "TO-92", supplier: "Digikey", lowStockThreshold: 15 },
-  { id: "c-11", name: "IRLZ44N MOSFET", category: "Transistors", storageUnit: "Transistors", bin: "R02-C01", compartment: "P01", quantity: 12, package: "TO-220", supplier: "Mouser", lowStockThreshold: 5 },
-  { id: "c-12", name: "470 Resistor", category: "Resistors", storageUnit: "Resistors", bin: "R02-C01", compartment: "P01", quantity: 3, package: "0603", supplier: "Digikey", lowStockThreshold: 20 },
-  { id: "c-13", name: "LED Red 3mm", category: "LEDs", storageUnit: "Transistors", bin: "R03-C01", compartment: "P01", quantity: 5, package: "3mm", supplier: "LCSC", lowStockThreshold: 10 },
+  { id: "c-7", name: "10uH Inductor", category: "Inductors", storageUnit: "Inductors", bin: "R01-C01", compartment: "P01", quantity: 45, package: "0805", supplier: "Digikey", lowStockThreshold: 10, tags: ["power", "smd"] },
+  { id: "c-8", name: "STM32F103", category: "Microcontrollers", storageUnit: "Microcontrollers", bin: "R01-C01", compartment: "P02", quantity: 14, package: "LQFP-48", supplier: "Mouser", lowStockThreshold: 5, tags: ["mcu", "arm", "project-alpha"] },
+  { id: "c-9", name: "ESP32-S3", category: "Microcontrollers", storageUnit: "Microcontrollers", bin: "R01-C02", compartment: "P01", quantity: 8, package: "QFN-56", supplier: "LCSC", lowStockThreshold: 3, tags: ["mcu", "wifi", "project-beta"] },
+  { id: "c-10", name: "2N2222 NPN", category: "Transistors", storageUnit: "Transistors", bin: "R01-C01", compartment: "P01", quantity: 75, package: "TO-92", supplier: "Digikey", lowStockThreshold: 15, tags: ["through-hole"] },
+  { id: "c-11", name: "IRLZ44N MOSFET", category: "Transistors", storageUnit: "Transistors", bin: "R02-C01", compartment: "P01", quantity: 12, package: "TO-220", supplier: "Mouser", lowStockThreshold: 5, tags: ["power", "through-hole"] },
+  { id: "c-12", name: "470 Resistor", category: "Resistors", storageUnit: "Resistors", bin: "R02-C01", compartment: "P01", quantity: 3, package: "0603", supplier: "Digikey", lowStockThreshold: 20, tags: ["smd"] },
+  { id: "c-13", name: "LED Red 3mm", category: "LEDs", storageUnit: "Transistors", bin: "R03-C01", compartment: "P01", quantity: 5, package: "3mm", supplier: "LCSC", lowStockThreshold: 10, tags: ["indicator", "through-hole"] },
 ];
 
 export const demoMovements: MovementRecord[] = [
