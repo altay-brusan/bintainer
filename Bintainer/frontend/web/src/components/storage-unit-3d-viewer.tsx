@@ -23,6 +23,8 @@ interface StorageUnit3DViewerProps {
   removedBins?: Set<string>;
   onBinDoubleClick?: (row: number, col: number) => void;
   onBinRestore?: (row: number, col: number) => void;
+  occupiedColor?: string;
+  occupiedHoverColor?: string;
 }
 
 // Bin dimensions (relative units)
@@ -53,6 +55,8 @@ function Bin({
   label,
   onSelect,
   onDoubleClick,
+  occupiedColor,
+  occupiedHoverColor,
 }: {
   position: [number, number, number];
   row: number;
@@ -63,9 +67,14 @@ function Bin({
   label: string;
   onSelect: (row: number, col: number) => void;
   onDoubleClick: (row: number, col: number) => void;
+  occupiedColor?: string;
+  occupiedHoverColor?: string;
 }) {
   const meshRef = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
+
+  const occColor = occupiedColor ?? COLORS.occupied;
+  const occHoverColor = occupiedHoverColor ?? COLORS.occupiedHover;
 
   const color = isDeleted
     ? "#EF4444"
@@ -73,10 +82,10 @@ function Bin({
       ? COLORS.selected
       : hovered
         ? hasComponents
-          ? COLORS.occupiedHover
+          ? occHoverColor
           : COLORS.emptyHover
         : hasComponents
-          ? COLORS.occupied
+          ? occColor
           : COLORS.empty;
 
   const handleClick = useCallback(
@@ -226,6 +235,8 @@ function ShelfUnit({
   removedBins,
   onBinDoubleClick,
   onBinRestore,
+  occupiedColor,
+  occupiedHoverColor,
 }: StorageUnit3DViewerProps) {
   const totalWidth = columns * (BIN_WIDTH + GAP) - GAP;
   const totalHeight = rows * (BIN_HEIGHT + GAP) - GAP;
@@ -306,6 +317,8 @@ function ShelfUnit({
               label={label}
               onSelect={onBinSelect}
               onDoubleClick={onBinDoubleClick ?? (() => {})}
+              occupiedColor={occupiedColor}
+              occupiedHoverColor={occupiedHoverColor}
             />
           );
         })
@@ -343,6 +356,8 @@ export function StorageUnit3DViewer({
   removedBins,
   onBinDoubleClick,
   onBinRestore,
+  occupiedColor,
+  occupiedHoverColor,
 }: StorageUnit3DViewerProps) {
   return (
     <div className="h-[500px] w-full rounded-xl border bg-gradient-to-b from-slate-900 to-slate-800 overflow-hidden">
@@ -366,6 +381,8 @@ export function StorageUnit3DViewer({
           removedBins={removedBins}
           onBinDoubleClick={onBinDoubleClick}
           onBinRestore={onBinRestore}
+          occupiedColor={occupiedColor}
+          occupiedHoverColor={occupiedHoverColor}
         />
 
         <OrbitControls
