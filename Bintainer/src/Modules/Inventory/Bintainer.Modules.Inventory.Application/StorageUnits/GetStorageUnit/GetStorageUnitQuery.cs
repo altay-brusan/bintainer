@@ -22,4 +22,7 @@ public sealed record BinResponse(
 public sealed record CompartmentResponse(
     Guid Id,
     int Index,
-    string Label);
+    string Label,
+    Guid? ComponentId,
+    string? ComponentPartNumber,
+    int Quantity);

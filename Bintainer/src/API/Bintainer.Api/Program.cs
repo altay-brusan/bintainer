@@ -86,6 +86,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseExceptionHandler();
 
+app.UseStaticFiles();
+
 app.UseCors();
 
 app.UseAuthentication();

@@ -9,6 +9,8 @@ public sealed class Compartment : Entity
     public int Index { get; private set; }
     public string Label { get; private set; } = string.Empty;
     public Guid BinId { get; private set; }
+    public Guid? ComponentId { get; private set; }
+    public int Quantity { get; private set; }
 
     internal static Compartment Create(int index, string label, Guid binId)
     {
@@ -19,5 +21,32 @@ public sealed class Compartment : Entity
             Label = label,
             BinId = binId
         };
+    }
+
+    public void AssignComponent(Guid componentId, int quantity)
+    {
+        ComponentId = componentId;
+        Quantity = quantity;
+    }
+
+    public void RemoveComponent()
+    {
+        ComponentId = null;
+        Quantity = 0;
+    }
+
+    public void AdjustQuantity(int delta)
+    {
+        var newQuantity = Quantity + delta;
+        if (newQuantity < 0)
+        {
+            newQuantity = 0;
+        }
+        Quantity = newQuantity;
+    }
+
+    public void UpdateLabel(string label)
+    {
+        Label = label;
     }
 }

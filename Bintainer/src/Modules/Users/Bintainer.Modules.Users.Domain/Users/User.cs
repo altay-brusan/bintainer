@@ -26,4 +26,10 @@ public sealed class User : Entity
 
         return user;
     }
+
+    public void UpdateProfile(string firstName, string lastName)
+    {
+        FirstName = firstName;
+        LastName = lastName;
+    }
 }

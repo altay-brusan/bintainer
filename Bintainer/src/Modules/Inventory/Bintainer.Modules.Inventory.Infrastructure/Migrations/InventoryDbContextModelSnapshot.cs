@@ -52,6 +52,50 @@ namespace Bintainer.Modules.Inventory.Infrastructure.Migrations
                     b.ToTable("bins", "inventory");
                 });
 
+            modelBuilder.Entity("Bintainer.Modules.Inventory.Domain.BomImports.BomImport", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("file_name");
+
+                    b.Property<int>("MatchedCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("matched_count");
+
+                    b.Property<int>("NewCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("new_count");
+
+                    b.Property<int>("TotalLines")
+                        .HasColumnType("integer")
+                        .HasColumnName("total_lines");
+
+                    b.Property<decimal>("TotalValue")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("total_value");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_bom_imports");
+
+                    b.ToTable("bom_imports", "inventory");
+                });
+
             modelBuilder.Entity("Bintainer.Modules.Inventory.Domain.Categories.Category", b =>
                 {
                     b.Property<Guid>("Id")
@@ -89,6 +133,10 @@ namespace Bintainer.Modules.Inventory.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("bin_id");
 
+                    b.Property<Guid?>("ComponentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("component_id");
+
                     b.Property<int>("Index")
                         .HasColumnType("integer")
                         .HasColumnName("index");
@@ -98,10 +146,6 @@ namespace Bintainer.Modules.Inventory.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
                         .HasColumnName("label");
-
-                    b.Property<Guid?>("PartId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("part_id");
 
                     b.Property<int>("Quantity")
                         .ValueGeneratedOnAdd()
@@ -115,10 +159,106 @@ namespace Bintainer.Modules.Inventory.Infrastructure.Migrations
                     b.HasIndex("BinId")
                         .HasDatabaseName("ix_compartments_bin_id");
 
-                    b.HasIndex("PartId")
-                        .HasDatabaseName("ix_compartments_part_id");
+                    b.HasIndex("ComponentId")
+                        .HasDatabaseName("ix_compartments_component_id");
 
                     b.ToTable("compartments", "inventory");
+                });
+
+            modelBuilder.Entity("Bintainer.Modules.Inventory.Domain.Components.Component", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Dictionary<string, string>>("Attributes")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("attributes");
+
+                    b.Property<Guid?>("CategoryId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("category_id");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("description");
+
+                    b.Property<string>("DetailedDescription")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("detailed_description");
+
+                    b.Property<Guid?>("FootprintId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("footprint_id");
+
+                    b.Property<string>("ImageUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("image_url");
+
+                    b.Property<int>("LowStockThreshold")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("low_stock_threshold");
+
+                    b.Property<string>("Manufacturer")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("manufacturer");
+
+                    b.Property<string>("ManufacturerPartNumber")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("manufacturer_part_number");
+
+                    b.Property<string>("PartNumber")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("part_number");
+
+                    b.Property<string>("Provider")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("provider");
+
+                    b.Property<string>("ProviderPartNumber")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("provider_part_number");
+
+                    b.Property<string>("Tags")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("tags");
+
+                    b.Property<decimal?>("UnitPrice")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("unit_price");
+
+                    b.Property<string>("Url")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("url");
+
+                    b.HasKey("Id")
+                        .HasName("pk_components");
+
+                    b.HasIndex("CategoryId")
+                        .HasDatabaseName("ix_components_category_id");
+
+                    b.HasIndex("FootprintId")
+                        .HasDatabaseName("ix_components_footprint_id");
+
+                    b.ToTable("components", "inventory");
                 });
 
             modelBuilder.Entity("Bintainer.Modules.Inventory.Domain.Footprints.Footprint", b =>
@@ -163,84 +303,61 @@ namespace Bintainer.Modules.Inventory.Infrastructure.Migrations
                     b.ToTable("inventories", "inventory");
                 });
 
-            modelBuilder.Entity("Bintainer.Modules.Inventory.Domain.Parts.Part", b =>
+            modelBuilder.Entity("Bintainer.Modules.Inventory.Domain.Movements.Movement", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<Dictionary<string, string>>("Attributes")
+                    b.Property<string>("Action")
                         .IsRequired()
-                        .HasColumnType("jsonb")
-                        .HasColumnName("attributes");
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("action");
 
-                    b.Property<Guid?>("CategoryId")
+                    b.Property<Guid?>("CompartmentId")
                         .HasColumnType("uuid")
-                        .HasColumnName("category_id");
+                        .HasColumnName("compartment_id");
 
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
-                        .HasColumnName("description");
-
-                    b.Property<string>("DetailedDescription")
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)")
-                        .HasColumnName("detailed_description");
-
-                    b.Property<Guid?>("FootprintId")
+                    b.Property<Guid>("ComponentId")
                         .HasColumnType("uuid")
-                        .HasColumnName("footprint_id");
+                        .HasColumnName("component_id");
 
-                    b.Property<string>("ImageUrl")
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date");
+
+                    b.Property<string>("Notes")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)")
-                        .HasColumnName("image_url");
+                        .HasColumnName("notes");
 
-                    b.Property<string>("ManufacturerPartNumber")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)")
-                        .HasColumnName("manufacturer_part_number");
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer")
+                        .HasColumnName("quantity");
 
-                    b.Property<string>("PartNumber")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("part_number");
+                    b.Property<Guid?>("SourceCompartmentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("source_compartment_id");
 
-                    b.Property<string>("Provider")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("provider");
-
-                    b.Property<string>("ProviderPartNumber")
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)")
-                        .HasColumnName("provider_part_number");
-
-                    b.Property<string>("Tags")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
-                        .HasColumnName("tags");
-
-                    b.Property<string>("Url")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
-                        .HasColumnName("url");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
 
                     b.HasKey("Id")
-                        .HasName("pk_parts");
+                        .HasName("pk_movements");
 
-                    b.HasIndex("CategoryId")
-                        .HasDatabaseName("ix_parts_category_id");
+                    b.HasIndex("CompartmentId")
+                        .HasDatabaseName("ix_movements_compartment_id");
 
-                    b.HasIndex("FootprintId")
-                        .HasDatabaseName("ix_parts_footprint_id");
+                    b.HasIndex("ComponentId")
+                        .HasDatabaseName("ix_movements_component_id");
 
-                    b.ToTable("parts", "inventory");
+                    b.HasIndex("Date")
+                        .HasDatabaseName("ix_movements_date");
+
+                    b.ToTable("movements", "inventory");
                 });
 
             modelBuilder.Entity("Bintainer.Modules.Inventory.Domain.StorageUnits.StorageUnit", b =>
@@ -309,26 +426,42 @@ namespace Bintainer.Modules.Inventory.Infrastructure.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_compartments_bins_bin_id");
 
-                    b.HasOne("Bintainer.Modules.Inventory.Domain.Parts.Part", null)
+                    b.HasOne("Bintainer.Modules.Inventory.Domain.Components.Component", null)
                         .WithMany()
-                        .HasForeignKey("PartId")
+                        .HasForeignKey("ComponentId")
                         .OnDelete(DeleteBehavior.SetNull)
-                        .HasConstraintName("fk_compartments_parts_part_id");
+                        .HasConstraintName("fk_compartments_components_component_id");
                 });
 
-            modelBuilder.Entity("Bintainer.Modules.Inventory.Domain.Parts.Part", b =>
+            modelBuilder.Entity("Bintainer.Modules.Inventory.Domain.Components.Component", b =>
                 {
                     b.HasOne("Bintainer.Modules.Inventory.Domain.Categories.Category", null)
                         .WithMany()
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.SetNull)
-                        .HasConstraintName("fk_parts_categories_category_id");
+                        .HasConstraintName("fk_components_categories_category_id");
 
                     b.HasOne("Bintainer.Modules.Inventory.Domain.Footprints.Footprint", null)
                         .WithMany()
                         .HasForeignKey("FootprintId")
                         .OnDelete(DeleteBehavior.SetNull)
-                        .HasConstraintName("fk_parts_footprints_footprint_id");
+                        .HasConstraintName("fk_components_footprints_footprint_id");
+                });
+
+            modelBuilder.Entity("Bintainer.Modules.Inventory.Domain.Movements.Movement", b =>
+                {
+                    b.HasOne("Bintainer.Modules.Inventory.Domain.Compartments.Compartment", null)
+                        .WithMany()
+                        .HasForeignKey("CompartmentId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_movements_compartments_compartment_id");
+
+                    b.HasOne("Bintainer.Modules.Inventory.Domain.Components.Component", null)
+                        .WithMany()
+                        .HasForeignKey("ComponentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_movements_components_component_id");
                 });
 
             modelBuilder.Entity("Bintainer.Modules.Inventory.Domain.StorageUnits.StorageUnit", b =>

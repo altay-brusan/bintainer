@@ -11,6 +11,7 @@ public sealed class UsersDbContext(DbContextOptions<UsersDbContext> options)
 {
     public DbSet<User> DomainUsers => Set<User>();
     public DbSet<Domain.Users.RefreshToken> RefreshTokens => Set<Domain.Users.RefreshToken>();
+    public DbSet<UserPreference> UserPreferences => Set<UserPreference>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
