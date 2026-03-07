@@ -1,7 +1,7 @@
 "use client";
 
-import { use, useState, useMemo, lazy, Suspense } from "react";
-import { ArrowLeft, Settings2, Grid3x3, Box } from "lucide-react";
+import { use, useState, useMemo, useCallback, lazy, Suspense } from "react";
+import { ArrowLeft, Settings2, Grid3x3, Box, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,7 +24,11 @@ export default function StorageUnitEditorPage({ params }: PageProps) {
   const { storageUnitId } = use(params);
   const storageUnit = demoStorageUnits.find((su) => su.id === storageUnitId);
   const [selectedBin, setSelectedBin] = useState<{ row: number; col: number } | null>(null);
-  const [viewMode, setViewMode] = useState<"grid" | "3d">("3d");
+  const [viewMode, setViewMode] = useState<"grid" | "3d">("grid");
+  const [editRows, setEditRows] = useState(storageUnit?.rows ?? 1);
+  const [editColumns, setEditColumns] = useState(storageUnit?.columns ?? 1);
+  const [deletedBins, setDeletedBins] = useState<Set<string>>(new Set());
+  const [removedBins, setRemovedBins] = useState<Set<string>>(new Set());
 
   const componentsInUnit = useMemo(
     () => demoComponents.filter((c) => c.storageUnit === storageUnit?.name),
@@ -36,6 +40,32 @@ export default function StorageUnitEditorPage({ params }: PageProps) {
     const binLabel = `R${String(selectedBin.row + 1).padStart(2, "0")}-C${String(selectedBin.col + 1).padStart(2, "0")}`;
     return componentsInUnit.filter((c) => c.bin === binLabel);
   }, [selectedBin, componentsInUnit, storageUnit]);
+
+  const toggleDeleteBin = useCallback((row: number, col: number) => {
+    setDeletedBins((prev) => {
+      const key = `${row}-${col}`;
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  }, []);
+
+  const handleSave = useCallback(() => {
+    // Move marked bins into permanently removed set
+    setRemovedBins((prev) => {
+      const next = new Set(prev);
+      for (const key of deletedBins) {
+        next.add(key);
+      }
+      return next;
+    });
+    setDeletedBins(new Set());
+    setSelectedBin(null);
+  }, [deletedBins]);
 
   if (!storageUnit) {
     return (
@@ -62,7 +92,7 @@ export default function StorageUnitEditorPage({ params }: PageProps) {
             <p className="text-muted-foreground">{storageUnit.name}</p>
           </div>
         </div>
-        <Button className="gap-2">
+        <Button className="gap-2" onClick={handleSave}>
           <Settings2 className="h-4 w-4" />
           Save Storage Unit
         </Button>
@@ -81,16 +111,33 @@ export default function StorageUnitEditorPage({ params }: PageProps) {
               </div>
               <div>
                 <Label>Rows</Label>
-                <Input type="number" defaultValue={storageUnit.rows} className="mt-1" />
+                <Input
+                  type="number"
+                  min={1}
+                  max={50}
+                  value={editRows}
+                  onChange={(e) => setEditRows(Math.max(1, parseInt(e.target.value) || 1))}
+                  className="mt-1"
+                />
               </div>
               <div>
                 <Label>Columns</Label>
-                <Input type="number" defaultValue={storageUnit.columns} className="mt-1" />
+                <Input
+                  type="number"
+                  min={1}
+                  max={50}
+                  value={editColumns}
+                  onChange={(e) => setEditColumns(Math.max(1, parseInt(e.target.value) || 1))}
+                  className="mt-1"
+                />
               </div>
             </div>
             <p className="mt-3 text-sm text-muted-foreground">
-              Grid size: {storageUnit.rows * storageUnit.columns} bins &middot;{" "}
-              {componentsInUnit.length} components stored &middot;{" "}
+              Grid size: {editRows * editColumns} bins
+              {deletedBins.size > 0 && (
+                <span className="text-red-500"> ({deletedBins.size} marked for removal)</span>
+              )}
+              {" "}&middot; {componentsInUnit.length} components stored &middot;{" "}
               <Link href="/find" className="text-primary hover:underline">
                 View Components
               </Link>
@@ -132,10 +179,10 @@ export default function StorageUnitEditorPage({ params }: PageProps) {
                 }
               >
                 <StorageUnit3DViewer
-                  rows={storageUnit.rows}
-                  columns={storageUnit.columns}
-                  bins={Array.from({ length: storageUnit.rows }).flatMap((_, r) =>
-                    Array.from({ length: storageUnit.columns }).map((_, c) => {
+                  rows={editRows}
+                  columns={editColumns}
+                  bins={Array.from({ length: editRows }).flatMap((_, r) =>
+                    Array.from({ length: editColumns }).map((_, c) => {
                       const binLabel = `R${String(r + 1).padStart(2, "0")}-C${String(c + 1).padStart(2, "0")}`;
                       return {
                         id: `${r}-${c}`,
@@ -147,6 +194,10 @@ export default function StorageUnitEditorPage({ params }: PageProps) {
                   )}
                   selectedBin={selectedBin}
                   onBinSelect={(row, col) => setSelectedBin({ row, col })}
+                  deletedBins={deletedBins}
+                  removedBins={removedBins}
+                  onBinDoubleClick={toggleDeleteBin}
+                  onBinRestore={(row, col) => setRemovedBins((prev) => { const next = new Set(prev); next.delete(`${row}-${col}`); return next; })}
                 />
               </Suspense>
             )}
@@ -158,7 +209,7 @@ export default function StorageUnitEditorPage({ params }: PageProps) {
             {/* Column headers */}
             <div className="flex gap-1.5 mb-1.5">
               <div className="w-10" />
-              {Array.from({ length: storageUnit.columns }).map((_, c) => (
+              {Array.from({ length: editColumns }).map((_, c) => (
                 <div
                   key={c}
                   className="flex h-6 w-10 items-center justify-center text-xs font-medium text-muted-foreground"
@@ -169,30 +220,49 @@ export default function StorageUnitEditorPage({ params }: PageProps) {
             </div>
 
             {/* Grid rows */}
-            {Array.from({ length: storageUnit.rows }).map((_, r) => (
+            {Array.from({ length: editRows }).map((_, r) => (
               <div key={r} className="flex gap-1.5 mb-1.5">
                 <div className="flex w-10 items-center justify-center text-xs font-medium text-muted-foreground">
                   {String(r + 1).padStart(2, "0")}
                 </div>
-                {Array.from({ length: storageUnit.columns }).map((_, c) => {
+                {Array.from({ length: editColumns }).map((_, c) => {
+                  const key = `${r}-${c}`;
+                  const isRemoved = removedBins.has(key);
+                  if (isRemoved) {
+                    return (
+                      <button
+                        key={c}
+                        onDoubleClick={() => setRemovedBins((prev) => { const next = new Set(prev); next.delete(key); return next; })}
+                        className="h-10 w-10 rounded-md border border-dashed border-muted-foreground/20 hover:border-primary/50 hover:bg-primary/5 transition-colors"
+                      />
+                    );
+                  }
                   const binLabel = `R${String(r + 1).padStart(2, "0")}-C${String(c + 1).padStart(2, "0")}`;
                   const hasComponents = componentsInUnit.some((comp) => comp.bin === binLabel);
                   const isSelected = selectedBin?.row === r && selectedBin?.col === c;
+                  const isDeleted = deletedBins.has(key);
 
                   return (
                     <button
                       key={c}
                       onClick={() => setSelectedBin({ row: r, col: c })}
+                      onDoubleClick={() => toggleDeleteBin(r, c)}
                       className={cn(
-                        "flex h-10 w-10 items-center justify-center rounded-md text-xs font-medium transition-all",
-                        isSelected
-                          ? "bg-primary text-primary-foreground ring-2 ring-primary/50 scale-105"
-                          : hasComponents
-                            ? "bg-blue-400 dark:bg-blue-500 text-white hover:bg-blue-500 dark:hover:bg-blue-400"
-                            : "bg-muted text-muted-foreground hover:bg-muted/80"
+                        "relative flex h-10 w-10 items-center justify-center rounded-md text-xs font-medium transition-all",
+                        isDeleted
+                          ? "bg-red-100 dark:bg-red-950 text-red-400 border border-red-300 dark:border-red-800 opacity-60"
+                          : isSelected
+                            ? "bg-primary text-primary-foreground ring-2 ring-primary/50 scale-105"
+                            : hasComponents
+                              ? "bg-blue-400 dark:bg-blue-500 text-white hover:bg-blue-500 dark:hover:bg-blue-400"
+                              : "bg-muted text-muted-foreground hover:bg-muted/80"
                       )}
                     >
-                      {String(c + 1).padStart(2, "0")}
+                      {isDeleted ? (
+                        <X className="h-5 w-5 text-red-500" />
+                      ) : (
+                        String(c + 1).padStart(2, "0")
+                      )}
                     </button>
                   );
                 })}
@@ -208,6 +278,9 @@ export default function StorageUnitEditorPage({ params }: PageProps) {
               </div>
               <div className="flex items-center gap-1.5">
                 <div className="h-3 w-3 rounded-sm bg-muted" /> Empty
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="h-3 w-3 rounded-sm border border-red-400 bg-red-100 dark:bg-red-950" /> Marked for removal
               </div>
             </div>
 

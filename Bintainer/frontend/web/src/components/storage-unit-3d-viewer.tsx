@@ -19,6 +19,10 @@ interface StorageUnit3DViewerProps {
   bins: BinData[];
   selectedBin: { row: number; col: number } | null;
   onBinSelect: (row: number, col: number) => void;
+  deletedBins?: Set<string>;
+  removedBins?: Set<string>;
+  onBinDoubleClick?: (row: number, col: number) => void;
+  onBinRestore?: (row: number, col: number) => void;
 }
 
 // Bin dimensions (relative units)
@@ -45,29 +49,35 @@ function Bin({
   col,
   hasComponents,
   isSelected,
+  isDeleted,
   label,
   onSelect,
+  onDoubleClick,
 }: {
   position: [number, number, number];
   row: number;
   col: number;
   hasComponents: boolean;
   isSelected: boolean;
+  isDeleted: boolean;
   label: string;
   onSelect: (row: number, col: number) => void;
+  onDoubleClick: (row: number, col: number) => void;
 }) {
   const meshRef = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
 
-  const color = isSelected
-    ? COLORS.selected
-    : hovered
-      ? hasComponents
-        ? COLORS.occupiedHover
-        : COLORS.emptyHover
-      : hasComponents
-        ? COLORS.occupied
-        : COLORS.empty;
+  const color = isDeleted
+    ? "#EF4444"
+    : isSelected
+      ? COLORS.selected
+      : hovered
+        ? hasComponents
+          ? COLORS.occupiedHover
+          : COLORS.emptyHover
+        : hasComponents
+          ? COLORS.occupied
+          : COLORS.empty;
 
   const handleClick = useCallback(
     (e: ThreeEvent<MouseEvent>) => {
@@ -75,6 +85,14 @@ function Bin({
       onSelect(row, col);
     },
     [onSelect, row, col]
+  );
+
+  const handleDoubleClick = useCallback(
+    (e: ThreeEvent<MouseEvent>) => {
+      e.stopPropagation();
+      onDoubleClick(row, col);
+    },
+    [onDoubleClick, row, col]
   );
 
   return (
@@ -86,6 +104,7 @@ function Bin({
         radius={0.03}
         smoothness={4}
         onClick={handleClick}
+        onDoubleClick={handleDoubleClick}
         onPointerOver={(e) => {
           e.stopPropagation();
           setHovered(true);
@@ -99,7 +118,7 @@ function Bin({
         <meshStandardMaterial
           color={color}
           transparent
-          opacity={isSelected ? 1 : 0.85}
+          opacity={isDeleted ? 0.2 : isSelected ? 1 : 0.85}
           roughness={0.3}
           metalness={0.1}
         />
@@ -109,7 +128,7 @@ function Bin({
       <Text
         position={[0, 0, BIN_DEPTH / 2 + 0.001]}
         fontSize={0.15}
-        color={COLORS.label}
+        color={isDeleted ? "#EF4444" : COLORS.label}
         anchorX="center"
         anchorY="middle"
         font={undefined}
@@ -117,8 +136,22 @@ function Bin({
         {label}
       </Text>
 
+      {/* Red X overlay for deleted bins */}
+      {isDeleted && (
+        <Text
+          position={[0, 0, BIN_DEPTH / 2 + 0.01]}
+          fontSize={0.4}
+          color="#EF4444"
+          anchorX="center"
+          anchorY="middle"
+          font={undefined}
+        >
+          ✕
+        </Text>
+      )}
+
       {/* Selection glow */}
-      {isSelected && (
+      {isSelected && !isDeleted && (
         <RoundedBox
           args={[BIN_WIDTH + 0.06, BIN_HEIGHT + 0.06, BIN_DEPTH + 0.06]}
           radius={0.04}
@@ -134,14 +167,51 @@ function Bin({
       )}
 
       {/* Drawer handle detail */}
-      <mesh position={[0, -0.05, BIN_DEPTH / 2 + 0.02]}>
-        <boxGeometry args={[0.3, 0.04, 0.02]} />
+      {!isDeleted && (
+        <mesh position={[0, -0.05, BIN_DEPTH / 2 + 0.02]}>
+          <boxGeometry args={[0.3, 0.04, 0.02]} />
+          <meshStandardMaterial
+            color={isSelected ? "#c7d2fe" : "#cbd5e1"}
+            roughness={0.2}
+            metalness={0.4}
+          />
+        </mesh>
+      )}
+    </group>
+  );
+}
+
+function GhostBin({
+  position,
+  row,
+  col,
+  onRestore,
+}: {
+  position: [number, number, number];
+  row: number;
+  col: number;
+  onRestore: (row: number, col: number) => void;
+}) {
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <group position={position}>
+      <RoundedBox
+        args={[BIN_WIDTH, BIN_HEIGHT, BIN_DEPTH]}
+        radius={0.03}
+        smoothness={4}
+        onDoubleClick={(e) => { e.stopPropagation(); onRestore(row, col); }}
+        onPointerOver={(e) => { e.stopPropagation(); setHovered(true); document.body.style.cursor = "pointer"; }}
+        onPointerOut={() => { setHovered(false); document.body.style.cursor = "auto"; }}
+      >
         <meshStandardMaterial
-          color={isSelected ? "#c7d2fe" : "#cbd5e1"}
-          roughness={0.2}
-          metalness={0.4}
+          color={hovered ? "#94A3B8" : "#475569"}
+          transparent
+          opacity={hovered ? 0.3 : 0.08}
+          roughness={0.8}
+          wireframe={!hovered}
         />
-      </mesh>
+      </RoundedBox>
     </group>
   );
 }
@@ -152,6 +222,10 @@ function ShelfUnit({
   bins,
   selectedBin,
   onBinSelect,
+  deletedBins,
+  removedBins,
+  onBinDoubleClick,
+  onBinRestore,
 }: StorageUnit3DViewerProps) {
   const totalWidth = columns * (BIN_WIDTH + GAP) - GAP;
   const totalHeight = rows * (BIN_HEIGHT + GAP) - GAP;
@@ -201,14 +275,26 @@ function ShelfUnit({
       {/* Bins */}
       {Array.from({ length: rows }).map((_, r) =>
         Array.from({ length: columns }).map((_, c) => {
-          const binData = binMap.get(`${r}-${c}`);
+          const key = `${r}-${c}`;
           const x = offsetX + c * (BIN_WIDTH + GAP);
           const y = offsetY + (rows - 1 - r) * (BIN_HEIGHT + GAP);
+          if (removedBins?.has(key)) {
+            return (
+              <GhostBin
+                key={key}
+                position={[x, y, 0]}
+                row={r}
+                col={c}
+                onRestore={onBinRestore ?? (() => {})}
+              />
+            );
+          }
+          const binData = binMap.get(key);
           const label = `${String(r + 1).padStart(2, "0")}-${String(c + 1).padStart(2, "0")}`;
 
           return (
             <Bin
-              key={`${r}-${c}`}
+              key={key}
               position={[x, y, 0]}
               row={r}
               col={c}
@@ -216,8 +302,10 @@ function ShelfUnit({
               isSelected={
                 selectedBin?.row === r && selectedBin?.col === c
               }
+              isDeleted={deletedBins?.has(key) ?? false}
               label={label}
               onSelect={onBinSelect}
+              onDoubleClick={onBinDoubleClick ?? (() => {})}
             />
           );
         })
@@ -227,11 +315,18 @@ function ShelfUnit({
 }
 
 function CameraSetup({ rows, columns }: { rows: number; columns: number }) {
-  const { camera } = useThree();
-  const distance = Math.max(rows, columns) * 1.2 + 2;
+  const { camera, size } = useThree();
+  const totalWidth = columns * (BIN_WIDTH + GAP) - GAP + 0.3;
+  const totalHeight = rows * (BIN_HEIGHT + GAP) - GAP + 0.3;
 
   if (camera instanceof THREE.PerspectiveCamera) {
-    camera.position.set(distance * 0.6, distance * 0.3, distance * 0.8);
+    const fov = camera.fov * (Math.PI / 180);
+    const aspect = size.width / size.height;
+    // Calculate distance needed to fit the model
+    const distH = totalHeight / (2 * Math.tan(fov / 2));
+    const distW = totalWidth / (2 * Math.tan(fov / 2) * aspect);
+    const dist = Math.max(distH, distW) + BIN_DEPTH;
+    camera.position.set(0, 0, dist);
     camera.lookAt(0, 0, 0);
   }
 
@@ -244,6 +339,10 @@ export function StorageUnit3DViewer({
   bins,
   selectedBin,
   onBinSelect,
+  deletedBins,
+  removedBins,
+  onBinDoubleClick,
+  onBinRestore,
 }: StorageUnit3DViewerProps) {
   return (
     <div className="h-[500px] w-full rounded-xl border bg-gradient-to-b from-slate-900 to-slate-800 overflow-hidden">
@@ -263,6 +362,10 @@ export function StorageUnit3DViewer({
           bins={bins}
           selectedBin={selectedBin}
           onBinSelect={onBinSelect}
+          deletedBins={deletedBins}
+          removedBins={removedBins}
+          onBinDoubleClick={onBinDoubleClick}
+          onBinRestore={onBinRestore}
         />
 
         <OrbitControls
@@ -271,7 +374,10 @@ export function StorageUnit3DViewer({
           enableRotate
           minDistance={2}
           maxDistance={20}
-          maxPolarAngle={Math.PI / 1.5}
+          minPolarAngle={Math.PI / 2 - Math.PI / 18}
+          maxPolarAngle={Math.PI / 2 + Math.PI / 18}
+          minAzimuthAngle={-Math.PI / 18}
+          maxAzimuthAngle={Math.PI / 18}
         />
         <Environment preset="city" />
       </Canvas>
