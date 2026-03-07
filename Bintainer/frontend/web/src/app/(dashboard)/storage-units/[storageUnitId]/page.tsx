@@ -1,7 +1,7 @@
 "use client";
 
 import { use, useState, useMemo, useCallback, lazy, Suspense } from "react";
-import { ArrowLeft, Settings2, Grid3x3, Box, X } from "lucide-react";
+import { ArrowLeft, Settings2, Grid3x3, Box, X, Plus, Minus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,6 +29,9 @@ export default function StorageUnitEditorPage({ params }: PageProps) {
   const [editColumns, setEditColumns] = useState(storageUnit?.columns ?? 1);
   const [deletedBins, setDeletedBins] = useState<Set<string>>(new Set());
   const [removedBins, setRemovedBins] = useState<Set<string>>(new Set());
+  // Map of "row-col" → compartment count (default 1 for every bin, max 5)
+  const [binCompartments, setBinCompartments] = useState<Map<string, number>>(new Map());
+  const [selectedCompartment, setSelectedCompartment] = useState<number | null>(null);
 
   const componentsInUnit = useMemo(
     () => demoComponents.filter((c) => c.storageUnit === storageUnit?.name),
@@ -40,6 +43,26 @@ export default function StorageUnitEditorPage({ params }: PageProps) {
     const binLabel = `R${String(selectedBin.row + 1).padStart(2, "0")}-C${String(selectedBin.col + 1).padStart(2, "0")}`;
     return componentsInUnit.filter((c) => c.bin === binLabel);
   }, [selectedBin, componentsInUnit, storageUnit]);
+
+  const selectBin = useCallback((bin: { row: number; col: number } | null) => {
+    setSelectedBin(bin);
+    setSelectedCompartment(null);
+  }, []);
+
+  const selectedBinKey = selectedBin ? `${selectedBin.row}-${selectedBin.col}` : null;
+  const selectedBinCompartmentCount = selectedBinKey ? (binCompartments.get(selectedBinKey) ?? 1) : 1;
+
+  const setCompartmentCount = useCallback((key: string, count: number) => {
+    setBinCompartments((prev) => {
+      const next = new Map(prev);
+      if (count <= 1) {
+        next.delete(key);
+      } else {
+        next.set(key, count);
+      }
+      return next;
+    });
+  }, []);
 
   const toggleDeleteBin = useCallback((row: number, col: number) => {
     setDeletedBins((prev) => {
@@ -64,7 +87,7 @@ export default function StorageUnitEditorPage({ params }: PageProps) {
       return next;
     });
     setDeletedBins(new Set());
-    setSelectedBin(null);
+    selectBin(null);
   }, [deletedBins]);
 
   if (!storageUnit) {
@@ -193,7 +216,7 @@ export default function StorageUnitEditorPage({ params }: PageProps) {
                     })
                   )}
                   selectedBin={selectedBin}
-                  onBinSelect={(row, col) => setSelectedBin({ row, col })}
+                  onBinSelect={(row, col) => selectBin({ row, col })}
                   deletedBins={deletedBins}
                   removedBins={removedBins}
                   onBinDoubleClick={toggleDeleteBin}
@@ -245,7 +268,7 @@ export default function StorageUnitEditorPage({ params }: PageProps) {
                   return (
                     <button
                       key={c}
-                      onClick={() => setSelectedBin({ row: r, col: c })}
+                      onClick={() => selectBin({ row: r, col: c })}
                       onDoubleClick={() => toggleDeleteBin(r, c)}
                       className={cn(
                         "relative flex h-10 w-10 items-center justify-center rounded-md text-xs font-medium transition-all",
@@ -303,41 +326,73 @@ export default function StorageUnitEditorPage({ params }: PageProps) {
                 </div>
 
                 <div>
-                  <h4 className="mb-2 text-sm font-medium">Compartments</h4>
-                  {selectedBinComponents.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">
-                      No components in this bin
-                    </p>
-                  ) : (
-                    <div className="space-y-2">
-                      {selectedBinComponents.map((comp) => (
-                        <div
-                          key={comp.id}
-                          className="rounded-lg border bg-background p-3"
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="text-sm font-medium">Compartments</h4>
+                    <div className="flex items-center gap-1.5">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-7 w-7"
+                        disabled={selectedBinCompartmentCount <= 1}
+                        onClick={() => selectedBinKey && setCompartmentCount(selectedBinKey, selectedBinCompartmentCount - 1)}
+                      >
+                        <Minus className="h-3.5 w-3.5" />
+                      </Button>
+                      <span className="w-6 text-center text-sm font-medium">{selectedBinCompartmentCount}</span>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-7 w-7"
+                        disabled={selectedBinCompartmentCount >= 5}
+                        onClick={() => selectedBinKey && setCompartmentCount(selectedBinKey, selectedBinCompartmentCount + 1)}
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    {Array.from({ length: selectedBinCompartmentCount }).map((_, i) => {
+                      const compartmentLabel = `C${i + 1}`;
+                      const comp = selectedBinComponents.find((c) => c.compartment === compartmentLabel);
+                      const isActive = selectedCompartment === i;
+                      return (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => setSelectedCompartment(isActive ? null : i)}
+                          className={cn(
+                            "w-full rounded-lg border bg-background p-3 text-left transition-all",
+                            isActive
+                              ? "ring-2 ring-primary/50 border-primary"
+                              : "hover:border-muted-foreground/30"
+                          )}
                         >
                           <div className="flex items-center justify-between">
-                            <p className="text-sm font-medium">{comp.name}</p>
-                            <Badge variant="secondary" className="text-xs">
-                              {comp.compartment}
+                            <p className="text-sm font-medium">{comp ? comp.name : "Empty"}</p>
+                            <Badge variant={isActive ? "default" : "secondary"} className="text-xs">
+                              {compartmentLabel}
                             </Badge>
                           </div>
-                          <p className="mt-1 text-sm text-muted-foreground">
-                            Qty: {comp.quantity}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                          {comp ? (
+                            <p className="mt-1 text-sm text-muted-foreground">
+                              Qty: {comp.quantity}
+                            </p>
+                          ) : (
+                            <p className="mt-1 text-sm text-muted-foreground italic">
+                              No component assigned
+                            </p>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Button variant="outline" className="w-full" size="sm">
-                    Add Component
-                  </Button>
-                  <Button variant="outline" className="w-full" size="sm">
-                    Add Compartment
-                  </Button>
-                </div>
+                <Button variant="outline" className="w-full" size="sm" disabled={selectedCompartment === null}>
+                  <Plus className="h-3.5 w-3.5 mr-1.5" />
+                  {selectedCompartment !== null ? `Add Component to C${selectedCompartment + 1}` : "Add Component"}
+                </Button>
               </div>
             ) : (
               <p className="mt-2 text-sm text-muted-foreground">
