@@ -1,7 +1,7 @@
 "use client";
 
-import { use, useState, useMemo } from "react";
-import { ArrowLeft, Settings2 } from "lucide-react";
+import { use, useState, useMemo, lazy, Suspense } from "react";
+import { ArrowLeft, Settings2, Grid3x3, Box } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,6 +9,12 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { demoStorageUnits, demoComponents } from "@/lib/demo-data";
 import Link from "next/link";
+
+const StorageUnit3DViewer = lazy(() =>
+  import("@/components/storage-unit-3d-viewer").then((m) => ({
+    default: m.StorageUnit3DViewer,
+  }))
+);
 
 interface PageProps {
   params: Promise<{ storageUnitId: string }>;
@@ -18,6 +24,7 @@ export default function StorageUnitEditorPage({ params }: PageProps) {
   const { storageUnitId } = use(params);
   const storageUnit = demoStorageUnits.find((su) => su.id === storageUnitId);
   const [selectedBin, setSelectedBin] = useState<{ row: number; col: number } | null>(null);
+  const [viewMode, setViewMode] = useState<"grid" | "3d">("3d");
 
   const componentsInUnit = useMemo(
     () => demoComponents.filter((c) => c.storageUnit === storageUnit?.name),
@@ -90,9 +97,63 @@ export default function StorageUnitEditorPage({ params }: PageProps) {
             </p>
           </div>
 
-          {/* Bin Grid */}
+          {/* Bin View */}
           <div className="rounded-xl border bg-card p-5 shadow-sm">
-            <h3 className="mb-4 font-semibold">Bin Grid</h3>
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="font-semibold">Bin Grid</h3>
+              <div className="flex rounded-lg border p-0.5">
+                <Button
+                  variant={viewMode === "3d" ? "default" : "ghost"}
+                  size="sm"
+                  className="gap-1.5 h-8 px-3"
+                  onClick={() => setViewMode("3d")}
+                >
+                  <Box className="h-3.5 w-3.5" />
+                  3D
+                </Button>
+                <Button
+                  variant={viewMode === "grid" ? "default" : "ghost"}
+                  size="sm"
+                  className="gap-1.5 h-8 px-3"
+                  onClick={() => setViewMode("grid")}
+                >
+                  <Grid3x3 className="h-3.5 w-3.5" />
+                  Grid
+                </Button>
+              </div>
+            </div>
+
+            {viewMode === "3d" && (
+              <Suspense
+                fallback={
+                  <div className="flex h-[500px] items-center justify-center rounded-xl border bg-slate-900">
+                    <p className="text-sm text-slate-400">Loading 3D viewer...</p>
+                  </div>
+                }
+              >
+                <StorageUnit3DViewer
+                  rows={storageUnit.rows}
+                  columns={storageUnit.columns}
+                  bins={Array.from({ length: storageUnit.rows }).flatMap((_, r) =>
+                    Array.from({ length: storageUnit.columns }).map((_, c) => {
+                      const binLabel = `R${String(r + 1).padStart(2, "0")}-C${String(c + 1).padStart(2, "0")}`;
+                      return {
+                        id: `${r}-${c}`,
+                        row: r,
+                        col: c,
+                        hasComponents: componentsInUnit.some((comp) => comp.bin === binLabel),
+                      };
+                    })
+                  )}
+                  selectedBin={selectedBin}
+                  onBinSelect={(row, col) => setSelectedBin({ row, col })}
+                />
+              </Suspense>
+            )}
+
+            {viewMode === "grid" && (
+              <>
+
 
             {/* Column headers */}
             <div className="flex gap-1.5 mb-1.5">
@@ -149,6 +210,9 @@ export default function StorageUnitEditorPage({ params }: PageProps) {
                 <div className="h-3 w-3 rounded-sm bg-muted" /> Empty
               </div>
             </div>
+
+              </>
+            )}
           </div>
         </div>
 
