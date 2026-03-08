@@ -33,10 +33,15 @@ Bintainer.slnx (.NET 9 — Clean Architecture modular monolith)
 │   ├── Bintainer.Modules.Users.Presentation    — Auth endpoints (api/auth/*)
 │   └── Bintainer.Modules.Users.Infrastructure  — UsersDbContext, Identity, JWT
 ├── src/Modules/Inventory/
-│   ├── Bintainer.Modules.Inventory.Domain          — Inventory, StorageUnit, Bin, Compartment
-│   ├── Bintainer.Modules.Inventory.Application     — CRUD for inventories and storage units
-│   ├── Bintainer.Modules.Inventory.Presentation    — Inventory endpoints (api/inventories/*, api/storage-units/*)
-│   └── Bintainer.Modules.Inventory.Infrastructure  — InventoryDbContext, EF configs
+│   ├── Bintainer.Modules.Inventory.Domain          — Inventory, StorageUnit, Bin, Compartment, Movement entities
+│   ├── Bintainer.Modules.Inventory.Application     — CRUD for inventories, storage units, compartments; component qty/move; movements; reports
+│   ├── Bintainer.Modules.Inventory.Presentation    — Endpoints (api/inventories/*, api/storage-units/*, api/compartments/*, api/components/*/quantity|move, api/movements, api/reports/*)
+│   └── Bintainer.Modules.Inventory.Infrastructure  — InventoryDbContext, EF configs, repositories
+├── src/Modules/Catalog/
+│   ├── Bintainer.Modules.Catalog.Domain            — Component, Category, Footprint, BomImport entities
+│   ├── Bintainer.Modules.Catalog.Application       — Component CRUD + search + image upload; categories; footprints; tags; BOM import
+│   ├── Bintainer.Modules.Catalog.Presentation      — Endpoints (api/components/*, api/categories/*, api/footprints/*, api/tags, api/bom/*)
+│   └── Bintainer.Modules.Catalog.Infrastructure    — CatalogDbContext, file storage, repositories
 └── src/API/
     └── Bintainer.Api — Composition root (Serilog, Swagger, JWT auth, module wiring)
 ```
@@ -53,6 +58,19 @@ Bintainer.slnx (.NET 9 — Clean Architecture modular monolith)
 - **Unit of Work**: each module's DbContext implements `IUnitOfWork`
 - **Domain events**: raised via `Entity.Raise()`, published by `PublishDomainEventsInterceptor`
 - **Schema-per-module**: `users`, `inventory` PostgreSQL schemas
+
+## Domain Model
+
+```
+Inventory → StorageUnit → Bin (col, row) → Compartment (index, label, componentId?, quantity)
+Component (catalog entry: partNumber, description, manufacturer, unitPrice, tags csv, attributes jsonb, lowStockThreshold, categoryId?, footprintId?)
+Category (name, parentId?)
+Footprint (name)
+Movement (componentId, action, quantity, date, userId, notes)
+BomImport (fileName, lines, matched/new counts)
+```
+
+A Compartment references a Component via `ComponentId`. A Component can exist in multiple Compartments.
 
 ## Database
 
@@ -71,6 +89,7 @@ All services registered as **scoped**. Module registration via extension methods
 - `AddInfrastructure(connectionString)` — Npgsql, caching, MassTransit, clock, auth
 - `AddUsersModule(config)` — Identity, JWT, user repos
 - `AddInventoryModule(config)` — Inventory DbContext, repos
+- `AddCatalogModule(config)` — Catalog DbContext, component repos, file storage
 
 ## External Services
 
