@@ -1,8 +1,11 @@
 using Bintainer.Common.Infrastructure.Interceptors;
 using Bintainer.Common.Presentation.Endpoints;
 using Bintainer.Modules.Catalog.Application.Abstractions.Data;
-using Bintainer.Modules.Catalog.IntegrationEvents;
 using Bintainer.Modules.Catalog.Application.Abstractions.Storage;
+using Bintainer.Modules.Catalog.Application.BomImports;
+using Bintainer.Modules.Catalog.Application.Categories;
+using Bintainer.Modules.Catalog.Application.Components;
+using Bintainer.Modules.Catalog.Application.Footprints;
 using Bintainer.Modules.Catalog.Domain.BomImports;
 using Bintainer.Modules.Catalog.Domain.Categories;
 using Bintainer.Modules.Catalog.Domain.Components;
@@ -13,6 +16,7 @@ using Bintainer.Modules.Catalog.Infrastructure.Components;
 using Bintainer.Modules.Catalog.Infrastructure.Database;
 using Bintainer.Modules.Catalog.Infrastructure.Footprints;
 using Bintainer.Modules.Catalog.Infrastructure.Storage;
+using Bintainer.Modules.Catalog.IntegrationEvents;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -42,6 +46,11 @@ public static class CatalogModule
         services.AddScoped<IBomImportRepository, BomImportRepository>();
         services.AddScoped<IFileStorageService, LocalFileStorageService>();
         services.AddScoped<ICatalogApi, CatalogApi>();
+
+        services.AddScoped<IComponentReadService, ComponentReadService>();
+        services.AddScoped<ICategoryReadService, CategoryReadService>();
+        services.AddScoped<IFootprintReadService, FootprintReadService>();
+        services.AddScoped<IBomImportReadService, BomImportReadService>();
 
         return services;
     }
