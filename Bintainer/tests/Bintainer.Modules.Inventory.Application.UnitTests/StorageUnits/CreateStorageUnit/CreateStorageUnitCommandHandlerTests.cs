@@ -1,5 +1,3 @@
-using Bintainer.Common.Application.ActivityLog;
-using Bintainer.Common.Application.Authorization;
 using Bintainer.Common.Domain;
 using Bintainer.Modules.Inventory.Application.Abstractions.Data;
 using Bintainer.Modules.Inventory.Application.StorageUnits.CreateStorageUnit;
@@ -13,14 +11,12 @@ public class CreateStorageUnitCommandHandlerTests
     private readonly IInventoryRepository _inventoryRepository = Substitute.For<IInventoryRepository>();
     private readonly IStorageUnitRepository _storageUnitRepository = Substitute.For<IStorageUnitRepository>();
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
-    private readonly IActivityLogger _activityLogger = Substitute.For<IActivityLogger>();
-    private readonly ICurrentUserService _currentUserService = Substitute.For<ICurrentUserService>();
     private readonly CreateStorageUnitCommandHandler _handler;
 
     public CreateStorageUnitCommandHandlerTests()
     {
         _handler = new CreateStorageUnitCommandHandler(
-            _inventoryRepository, _storageUnitRepository, _unitOfWork, _activityLogger, _currentUserService);
+            _inventoryRepository, _storageUnitRepository, _unitOfWork);
     }
 
     [Fact]

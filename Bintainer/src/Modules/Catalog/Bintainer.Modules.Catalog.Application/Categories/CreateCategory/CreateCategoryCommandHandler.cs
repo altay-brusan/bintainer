@@ -1,5 +1,3 @@
-using Bintainer.Common.Application.ActivityLog;
-using Bintainer.Common.Application.Authorization;
 using Bintainer.Common.Application.Messaging;
 using Bintainer.Common.Domain;
 using Bintainer.Modules.Catalog.Application.Abstractions.Data;
@@ -9,8 +7,6 @@ namespace Bintainer.Modules.Catalog.Application.Categories.CreateCategory;
 
 internal sealed class CreateCategoryCommandHandler(
     ICategoryRepository categoryRepository,
-    IActivityLogger activityLogger,
-    ICurrentUserService currentUserService,
     IUnitOfWork unitOfWork) : ICommandHandler<CreateCategoryCommand, Guid>
 {
     public async Task<Result<Guid>> Handle(CreateCategoryCommand request, CancellationToken cancellationToken)
@@ -29,14 +25,6 @@ internal sealed class CreateCategoryCommandHandler(
         categoryRepository.Insert(category);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
-
-        await activityLogger.LogAsync(
-            currentUserService.UserId,
-            "CategoryCreated",
-            "Category",
-            category.Id,
-            request.Name,
-            ct: cancellationToken);
 
         return category.Id;
     }

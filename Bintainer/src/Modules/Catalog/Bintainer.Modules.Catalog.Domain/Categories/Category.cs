@@ -21,7 +21,7 @@ public sealed class Category : Entity
             ParentId = parentId
         };
 
-        category.Raise(new CategoryCreatedDomainEvent(category.Id));
+        category.Raise(new CategoryCreatedDomainEvent(category.Id, name));
 
         return category;
     }
@@ -30,5 +30,7 @@ public sealed class Category : Entity
     {
         Name = name;
         ParentId = parentId;
+
+        Raise(new CategoryUpdatedDomainEvent(Id, name));
     }
 }

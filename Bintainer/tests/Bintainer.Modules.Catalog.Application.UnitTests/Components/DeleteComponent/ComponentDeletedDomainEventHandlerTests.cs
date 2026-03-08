@@ -19,7 +19,7 @@ public class ComponentDeletedDomainEventHandlerTests
     public async Task Handle_PublishesIntegrationEvent()
     {
         var componentId = Guid.NewGuid();
-        var domainEvent = new ComponentDeletedDomainEvent(componentId);
+        var domainEvent = new ComponentDeletedDomainEvent(componentId, "TEST-001");
 
         await _handler.Handle(domainEvent, CancellationToken.None);
 

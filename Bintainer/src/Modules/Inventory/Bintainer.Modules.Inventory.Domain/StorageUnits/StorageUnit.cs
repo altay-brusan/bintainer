@@ -37,7 +37,7 @@ public sealed class StorageUnit : Entity
             }
         }
 
-        storageUnit.Raise(new StorageUnitCreatedDomainEvent(storageUnit.Id));
+        storageUnit.Raise(new StorageUnitCreatedDomainEvent(storageUnit.Id, name));
 
         return storageUnit;
     }
@@ -45,5 +45,6 @@ public sealed class StorageUnit : Entity
     public void Update(string name)
     {
         Name = name;
+        Raise(new StorageUnitUpdatedDomainEvent(Id, name));
     }
 }

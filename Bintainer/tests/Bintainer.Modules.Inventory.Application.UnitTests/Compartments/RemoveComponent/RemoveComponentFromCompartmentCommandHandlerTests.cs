@@ -1,5 +1,3 @@
-using Bintainer.Common.Application.ActivityLog;
-using Bintainer.Common.Application.Authorization;
 using Bintainer.Modules.Inventory.Application.Abstractions.Data;
 using Bintainer.Modules.Inventory.Application.Compartments.RemoveComponent;
 using Bintainer.Modules.Inventory.Domain.Compartments;
@@ -11,14 +9,12 @@ public class RemoveComponentFromCompartmentCommandHandlerTests
 {
     private readonly ICompartmentRepository _compartmentRepository = Substitute.For<ICompartmentRepository>();
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
-    private readonly IActivityLogger _activityLogger = Substitute.For<IActivityLogger>();
-    private readonly ICurrentUserService _currentUserService = Substitute.For<ICurrentUserService>();
     private readonly RemoveComponentFromCompartmentCommandHandler _handler;
 
     public RemoveComponentFromCompartmentCommandHandlerTests()
     {
         _handler = new RemoveComponentFromCompartmentCommandHandler(
-            _compartmentRepository, _unitOfWork, _activityLogger, _currentUserService);
+            _compartmentRepository, _unitOfWork);
     }
 
     [Fact]

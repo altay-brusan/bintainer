@@ -23,5 +23,6 @@ public sealed record ActivityLogItemResponse(
     string EntityType,
     Guid EntityId,
     string? EntityName,
+    string? Message,
     string? Details,
     DateTime Timestamp);

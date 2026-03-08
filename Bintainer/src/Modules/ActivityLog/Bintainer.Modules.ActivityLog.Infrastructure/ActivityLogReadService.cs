@@ -59,6 +59,7 @@ internal sealed class ActivityLogReadService(IDbConnectionFactory dbConnectionFa
                 a.entity_type AS EntityType,
                 a.entity_id AS EntityId,
                 a.entity_name AS EntityName,
+                a.message AS Message,
                 a.details AS Details,
                 a.timestamp AS Timestamp
             FROM activity.activities a

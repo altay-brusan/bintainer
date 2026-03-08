@@ -28,12 +28,14 @@ public sealed class Compartment : Entity
     {
         ComponentId = componentId;
         Quantity = quantity;
+        Raise(new CompartmentComponentAssignedDomainEvent(Id, componentId, quantity));
     }
 
     public void RemoveComponent()
     {
         ComponentId = null;
         Quantity = 0;
+        Raise(new CompartmentComponentRemovedDomainEvent(Id));
     }
 
     public void AdjustQuantity(int delta)
@@ -49,6 +51,7 @@ public sealed class Compartment : Entity
     public void UpdateLabel(string label)
     {
         Label = label;
+        Raise(new CompartmentLabelUpdatedDomainEvent(Id, label));
     }
 
     public Result Deactivate()
@@ -58,6 +61,7 @@ public sealed class Compartment : Entity
             return Result.Failure(CompartmentErrors.HasComponent(Id));
         }
 
+        Raise(new CompartmentDeactivatedDomainEvent(Id));
         IsActive = false;
         return Result.Success();
     }
@@ -65,5 +69,6 @@ public sealed class Compartment : Entity
     public void Activate()
     {
         IsActive = true;
+        Raise(new CompartmentActivatedDomainEvent(Id));
     }
 }

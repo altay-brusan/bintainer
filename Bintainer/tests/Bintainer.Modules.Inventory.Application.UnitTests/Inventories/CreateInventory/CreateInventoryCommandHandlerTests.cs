@@ -1,5 +1,3 @@
-using Bintainer.Common.Application.ActivityLog;
-using Bintainer.Common.Application.Authorization;
 using Bintainer.Modules.Inventory.Application.Abstractions.Data;
 using Bintainer.Modules.Inventory.Application.Inventories.CreateInventory;
 using Bintainer.Modules.Inventory.Domain.Inventories;
@@ -10,14 +8,12 @@ public class CreateInventoryCommandHandlerTests
 {
     private readonly IInventoryRepository _inventoryRepository = Substitute.For<IInventoryRepository>();
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
-    private readonly IActivityLogger _activityLogger = Substitute.For<IActivityLogger>();
-    private readonly ICurrentUserService _currentUserService = Substitute.For<ICurrentUserService>();
     private readonly CreateInventoryCommandHandler _handler;
 
     public CreateInventoryCommandHandlerTests()
     {
         _handler = new CreateInventoryCommandHandler(
-            _inventoryRepository, _unitOfWork, _activityLogger, _currentUserService);
+            _inventoryRepository, _unitOfWork);
     }
 
     [Fact]

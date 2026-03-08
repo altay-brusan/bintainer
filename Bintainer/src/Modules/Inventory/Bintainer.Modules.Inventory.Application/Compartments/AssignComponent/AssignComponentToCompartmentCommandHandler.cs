@@ -1,5 +1,3 @@
-using Bintainer.Common.Application.ActivityLog;
-using Bintainer.Common.Application.Authorization;
 using Bintainer.Common.Application.Messaging;
 using Bintainer.Common.Domain;
 using Bintainer.Modules.Catalog.IntegrationEvents;
@@ -12,9 +10,7 @@ namespace Bintainer.Modules.Inventory.Application.Compartments.AssignComponent;
 internal sealed class AssignComponentToCompartmentCommandHandler(
     ICompartmentRepository compartmentRepository,
     ICatalogApi catalogApi,
-    IUnitOfWork unitOfWork,
-    IActivityLogger activityLogger,
-    ICurrentUserService currentUserService) : ICommandHandler<AssignComponentToCompartmentCommand>
+    IUnitOfWork unitOfWork) : ICommandHandler<AssignComponentToCompartmentCommand>
 {
     public async Task<Result> Handle(AssignComponentToCompartmentCommand request, CancellationToken cancellationToken)
     {
@@ -40,14 +36,6 @@ internal sealed class AssignComponentToCompartmentCommandHandler(
         compartment.AssignComponent(request.ComponentId, request.Quantity);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
-
-        await activityLogger.LogAsync(
-            currentUserService.UserId,
-            "ComponentAssigned",
-            "Compartment",
-            compartment.Id,
-            details: new { request.ComponentId, request.Quantity },
-            ct: cancellationToken);
 
         return Result.Success();
     }

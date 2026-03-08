@@ -76,7 +76,10 @@ builder.Services.AddApplication([
 ]);
 
 string connectionString = builder.Configuration.GetConnectionString("DefaultConnection")!;
-builder.Services.AddInfrastructure(connectionString, InventoryModule.ConfigureConsumers);
+builder.Services.AddInfrastructure(
+    connectionString,
+    InventoryModule.ConfigureConsumers,
+    ActivityLogModule.ConfigureConsumers);
 
 builder.Services.AddUsersModule(builder.Configuration);
 builder.Services.AddInventoryModule(builder.Configuration);

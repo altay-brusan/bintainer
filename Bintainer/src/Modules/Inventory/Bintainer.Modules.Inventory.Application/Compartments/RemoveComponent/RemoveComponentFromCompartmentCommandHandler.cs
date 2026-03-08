@@ -1,5 +1,3 @@
-using Bintainer.Common.Application.ActivityLog;
-using Bintainer.Common.Application.Authorization;
 using Bintainer.Common.Application.Messaging;
 using Bintainer.Common.Domain;
 using Bintainer.Modules.Inventory.Application.Abstractions.Data;
@@ -9,9 +7,7 @@ namespace Bintainer.Modules.Inventory.Application.Compartments.RemoveComponent;
 
 internal sealed class RemoveComponentFromCompartmentCommandHandler(
     ICompartmentRepository compartmentRepository,
-    IUnitOfWork unitOfWork,
-    IActivityLogger activityLogger,
-    ICurrentUserService currentUserService) : ICommandHandler<RemoveComponentFromCompartmentCommand>
+    IUnitOfWork unitOfWork) : ICommandHandler<RemoveComponentFromCompartmentCommand>
 {
     public async Task<Result> Handle(RemoveComponentFromCompartmentCommand request, CancellationToken cancellationToken)
     {
@@ -25,13 +21,6 @@ internal sealed class RemoveComponentFromCompartmentCommandHandler(
         compartment.RemoveComponent();
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
-
-        await activityLogger.LogAsync(
-            currentUserService.UserId,
-            "ComponentRemoved",
-            "Compartment",
-            compartment.Id,
-            ct: cancellationToken);
 
         return Result.Success();
     }

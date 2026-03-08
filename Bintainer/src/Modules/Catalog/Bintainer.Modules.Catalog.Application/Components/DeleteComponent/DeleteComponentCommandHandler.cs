@@ -1,5 +1,3 @@
-using Bintainer.Common.Application.ActivityLog;
-using Bintainer.Common.Application.Authorization;
 using Bintainer.Common.Application.Messaging;
 using Bintainer.Common.Domain;
 using Bintainer.Modules.Catalog.Application.Abstractions.Data;
@@ -9,8 +7,6 @@ namespace Bintainer.Modules.Catalog.Application.Components.DeleteComponent;
 
 internal sealed class DeleteComponentCommandHandler(
     IComponentRepository componentRepository,
-    IActivityLogger activityLogger,
-    ICurrentUserService currentUserService,
     IUnitOfWork unitOfWork) : ICommandHandler<DeleteComponentCommand>
 {
     public async Task<Result> Handle(DeleteComponentCommand request, CancellationToken cancellationToken)
@@ -22,18 +18,11 @@ internal sealed class DeleteComponentCommandHandler(
             return Result.Failure(ComponentErrors.NotFound(request.ComponentId));
         }
 
-        component.Raise(new ComponentDeletedDomainEvent(component.Id));
+        component.Raise(new ComponentDeletedDomainEvent(component.Id, component.PartNumber));
 
         componentRepository.Remove(component);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
-
-        await activityLogger.LogAsync(
-            currentUserService.UserId,
-            "ComponentDeleted",
-            "Component",
-            component.Id,
-            ct: cancellationToken);
 
         return Result.Success();
     }

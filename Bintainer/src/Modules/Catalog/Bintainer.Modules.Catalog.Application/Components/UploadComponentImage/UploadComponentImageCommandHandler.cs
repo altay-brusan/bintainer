@@ -1,5 +1,3 @@
-using Bintainer.Common.Application.ActivityLog;
-using Bintainer.Common.Application.Authorization;
 using Bintainer.Common.Application.Messaging;
 using Bintainer.Common.Domain;
 using Bintainer.Modules.Catalog.Application.Abstractions.Data;
@@ -11,8 +9,6 @@ namespace Bintainer.Modules.Catalog.Application.Components.UploadComponentImage;
 internal sealed class UploadComponentImageCommandHandler(
     IComponentRepository componentRepository,
     IFileStorageService fileStorageService,
-    IActivityLogger activityLogger,
-    ICurrentUserService currentUserService,
     IUnitOfWork unitOfWork) : ICommandHandler<UploadComponentImageCommand, string>
 {
     public async Task<Result<string>> Handle(UploadComponentImageCommand request, CancellationToken cancellationToken)
@@ -30,13 +26,6 @@ internal sealed class UploadComponentImageCommandHandler(
         component.UpdateImageUrl(url);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
-
-        await activityLogger.LogAsync(
-            currentUserService.UserId,
-            "ComponentImageUploaded",
-            "Component",
-            request.ComponentId,
-            ct: cancellationToken);
 
         return url;
     }

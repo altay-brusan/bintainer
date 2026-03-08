@@ -59,7 +59,7 @@ public sealed class Component : Entity
             LowStockThreshold = lowStockThreshold
         };
 
-        component.Raise(new ComponentCreatedDomainEvent(component.Id));
+        component.Raise(new ComponentCreatedDomainEvent(component.Id, partNumber));
 
         return component;
     }
@@ -96,10 +96,14 @@ public sealed class Component : Entity
         UnitPrice = unitPrice;
         Manufacturer = manufacturer;
         LowStockThreshold = lowStockThreshold;
+
+        Raise(new ComponentUpdatedDomainEvent(Id, partNumber));
     }
 
     public void UpdateImageUrl(string imageUrl)
     {
         ImageUrl = imageUrl;
+
+        Raise(new ComponentImageUploadedDomainEvent(Id));
     }
 }

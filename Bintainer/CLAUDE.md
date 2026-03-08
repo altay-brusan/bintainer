@@ -68,7 +68,7 @@ Bintainer.slnx (.NET 9 — Clean Architecture modular monolith)
 - **Repository pattern**: interfaces in Domain, implementations in Infrastructure
 - **Unit of Work**: each module's DbContext implements `IUnitOfWork`
 - **Domain events**: raised via `Entity.Raise()`, published by `PublishDomainEventsInterceptor`
-- **Activity logging**: `IActivityLogger` in Common.Application, all command handlers log actions
+- **Activity logging via domain events + MassTransit**: entities raise domain events → handlers publish `ActivityLoggedIntegrationEvent` via `IEventBus` → MassTransit delivers to `ActivityLoggedIntegrationEventConsumer` in ActivityLog module → saved to `activity` schema
 - **Schema-per-module**: `users`, `inventory`, `activity` PostgreSQL schemas
 
 ## Domain Model
@@ -79,7 +79,7 @@ Component (catalog entry: partNumber, description, manufacturer, unitPrice, tags
 Category (name, parentId?)
 Footprint (name)
 Movement (componentId, action=moved, quantity, date, userId, notes — physical moves only)
-ActivityEntry (userId, action, entityType, entityId, entityName, details jsonb, timestamp)
+ActivityEntry (userId, action, entityType, entityId, entityName, message, details jsonb, timestamp)
 BomImport (fileName, lines, matched/new counts)
 ```
 
@@ -106,6 +106,78 @@ All services registered as **scoped**. Module registration via extension methods
 - `AddCatalogModule(config)` — Catalog DbContext, component repos, file storage
 - `AddActivityLogModule(config)` — ActivityLog DbContext, ActivityLogger, read service
 - `AddReportsModule(config)` — ReportReadService (no DbContext, uses Dapper with IDbConnectionFactory)
+
+## Activity Logging
+
+Activity logging is driven by **domain events**, not manual calls in command handlers.
+
+### Flow
+
+```
+Entity method (e.g. Component.Create()) → raises domain event
+    → SaveChangesAsync() → PublishDomainEventsInterceptor publishes via MediatR
+    → IDomainEventHandler (activity handler) in the module's Application layer
+    → publishes ActivityLoggedIntegrationEvent via IEventBus (MassTransit)
+    → ActivityLoggedIntegrationEventConsumer (ActivityLog.Infrastructure)
+    → IActivityLogger saves ActivityEntry to activity.activities table
+```
+
+### Activity Handlers (Domain Event → Integration Event)
+
+Each module has an `ActivityLogging/` folder in its Application layer:
+- `Inventory.Application/ActivityLogging/InventoryActivityHandlers.cs` — 13 handlers
+- `Catalog.Application/ActivityLogging/CatalogActivityHandlers.cs` — 11 handlers
+
+Handlers inject `IEventBus` and `ICurrentUserService`. They convert domain events into a shared `ActivityLoggedIntegrationEvent` (Common.Application) and publish via MassTransit.
+
+### Consumer (Integration Event → Database)
+
+`ActivityLog.Infrastructure/Consumers/ActivityLoggedIntegrationEventConsumer.cs` — single MassTransit consumer that receives all activity events and persists them via `IActivityLogger`. No other module calls `IActivityLogger` directly.
+
+### ActivityEntry Schema (`activity.activities`)
+
+| Column | Type | Description |
+|---|---|---|
+| `id` | uuid | Primary key |
+| `user_id` | uuid | Who performed the action |
+| `action` | text | Programmatic action (e.g. `ComponentCreated`, `QuantityAdjusted`) |
+| `entity_type` | text | Entity type (e.g. `Component`, `StorageUnit`, `Compartment`) |
+| `entity_id` | uuid | ID of the affected entity |
+| `entity_name` | text? | Display name (e.g. part number, storage unit name) |
+| `message` | text? | Human-readable message for UI (e.g. "STM32F103 added") |
+| `details` | jsonb? | Extra context (e.g. `{"compartmentId":"...","quantity":10}`) |
+| `timestamp` | timestamp | When the action occurred (UTC) |
+
+### Tracked Actions
+
+| Action | EntityType | Has Name | Has Details |
+|---|---|---|---|
+| `InventoryCreated` | Inventory | yes | — |
+| `StorageUnitCreated/Updated/Deleted` | StorageUnit | yes | — |
+| `BinActivated/Deactivated` | Bin | — | — |
+| `ComponentAssigned` | Compartment | — | componentId, quantity |
+| `ComponentRemoved` | Compartment | — | — |
+| `CompartmentLabelUpdated` | Compartment | yes (label) | — |
+| `CompartmentActivated/Deactivated` | Compartment | — | — |
+| `QuantityAdjusted` | Component | — | compartmentId, action, quantity |
+| `ComponentMoved` | Component | — | sourceId, destId, quantity |
+| `ComponentCreated/Updated/Deleted` | Component | yes (partNumber) | — |
+| `ComponentImageUploaded` | Component | — | — |
+| `CategoryCreated/Updated/Deleted` | Category | yes | — |
+| `FootprintCreated/Updated/Deleted` | Footprint | yes | — |
+| `BomImported` | BomImport | yes (fileName) | lineCount |
+
+### Adding Activity Logging to a New Action
+
+1. Create a domain event in the module's Domain layer
+2. Raise it from the entity method or command handler
+3. Add an `IDomainEventHandler<T>` in the module's `ActivityLogging/` folder
+4. The handler publishes `ActivityLoggedIntegrationEvent` via `IEventBus` with a human-readable message
+5. The `ActivityLoggedIntegrationEventConsumer` in ActivityLog module handles persistence automatically
+
+### API Endpoint
+
+`GET /api/activity-log?action=&entityType=&entityId=&page=1&pageSize=20` — returns paged results with `userName` joined from users table.
 
 ## External Services
 

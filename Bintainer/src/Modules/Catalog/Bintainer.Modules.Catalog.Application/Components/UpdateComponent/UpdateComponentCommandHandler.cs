@@ -1,5 +1,3 @@
-using Bintainer.Common.Application.ActivityLog;
-using Bintainer.Common.Application.Authorization;
 using Bintainer.Common.Application.Messaging;
 using Bintainer.Common.Domain;
 using Bintainer.Modules.Catalog.Application.Abstractions.Data;
@@ -9,8 +7,6 @@ namespace Bintainer.Modules.Catalog.Application.Components.UpdateComponent;
 
 internal sealed class UpdateComponentCommandHandler(
     IComponentRepository componentRepository,
-    IActivityLogger activityLogger,
-    ICurrentUserService currentUserService,
     IUnitOfWork unitOfWork) : ICommandHandler<UpdateComponentCommand>
 {
     public async Task<Result> Handle(UpdateComponentCommand request, CancellationToken cancellationToken)
@@ -40,14 +36,6 @@ internal sealed class UpdateComponentCommandHandler(
             request.LowStockThreshold);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
-
-        await activityLogger.LogAsync(
-            currentUserService.UserId,
-            "ComponentUpdated",
-            "Component",
-            component.Id,
-            request.PartNumber,
-            ct: cancellationToken);
 
         return Result.Success();
     }

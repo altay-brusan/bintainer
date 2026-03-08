@@ -22,7 +22,7 @@ public sealed class Inventory : Entity
             UserId = userId
         };
 
-        inventory.Raise(new InventoryCreatedDomainEvent(inventory.Id));
+        inventory.Raise(new InventoryCreatedDomainEvent(inventory.Id, name));
 
         return inventory;
     }

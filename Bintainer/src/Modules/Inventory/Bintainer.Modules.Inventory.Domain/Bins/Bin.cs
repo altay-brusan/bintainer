@@ -41,6 +41,7 @@ public sealed class Bin : Entity
             return Result.Failure(BinErrors.HasComponents(Id));
         }
 
+        Raise(new BinDeactivatedDomainEvent(Id));
         IsActive = false;
 
         foreach (var compartment in _compartments)
@@ -53,6 +54,7 @@ public sealed class Bin : Entity
 
     public void Activate()
     {
+        Raise(new BinActivatedDomainEvent(Id));
         IsActive = true;
 
         foreach (var compartment in _compartments)

@@ -18,14 +18,18 @@ internal sealed class ActivityLogger(ActivityLogDbContext dbContext) : IActivity
         string entityType,
         Guid entityId,
         string? entityName = null,
+        string? message = null,
         object? details = null,
         CancellationToken ct = default)
     {
-        var detailsJson = details is not null
-            ? JsonSerializer.Serialize(details, JsonOptions)
-            : null;
+        var detailsJson = details switch
+        {
+            null => null,
+            string s => s,
+            _ => JsonSerializer.Serialize(details, JsonOptions)
+        };
 
-        var entry = ActivityEntry.Create(userId, action, entityType, entityId, entityName, detailsJson);
+        var entry = ActivityEntry.Create(userId, action, entityType, entityId, entityName, message, detailsJson);
         dbContext.Activities.Add(entry);
         await dbContext.SaveChangesAsync(ct);
     }

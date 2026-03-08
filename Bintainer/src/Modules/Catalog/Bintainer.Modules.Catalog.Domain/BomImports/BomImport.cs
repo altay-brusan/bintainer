@@ -22,7 +22,7 @@ public sealed class BomImport : Entity
         decimal totalValue,
         Guid userId)
     {
-        return new BomImport
+        var bomImport = new BomImport
         {
             Id = Guid.NewGuid(),
             FileName = fileName,
@@ -33,5 +33,9 @@ public sealed class BomImport : Entity
             UserId = userId,
             Date = DateTime.UtcNow
         };
+
+        bomImport.Raise(new BomImportedDomainEvent(bomImport.Id, fileName, totalLines));
+
+        return bomImport;
     }
 }

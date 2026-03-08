@@ -1,7 +1,9 @@
 using Bintainer.Common.Application.ActivityLog;
 using Bintainer.Common.Presentation.Endpoints;
 using Bintainer.Modules.ActivityLog.Application.GetActivityLog;
+using Bintainer.Modules.ActivityLog.Infrastructure.Consumers;
 using Bintainer.Modules.ActivityLog.Infrastructure.Database;
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -26,5 +28,10 @@ public static class ActivityLogModule
         services.AddScoped<IActivityLogReadService, ActivityLogReadService>();
 
         return services;
+    }
+
+    public static void ConfigureConsumers(IRegistrationConfigurator registrationConfigurator)
+    {
+        registrationConfigurator.AddConsumer<ActivityLoggedIntegrationEventConsumer>();
     }
 }

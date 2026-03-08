@@ -1,5 +1,3 @@
-using Bintainer.Common.Application.ActivityLog;
-using Bintainer.Common.Application.Authorization;
 using Bintainer.Modules.Catalog.Application.Abstractions.Data;
 using Bintainer.Modules.Catalog.Application.Components.DeleteComponent;
 using Bintainer.Modules.Catalog.Domain.Components;
@@ -9,14 +7,12 @@ namespace Bintainer.Modules.Catalog.Application.UnitTests.Components.DeleteCompo
 public class DeleteComponentCommandHandlerTests
 {
     private readonly IComponentRepository _componentRepository = Substitute.For<IComponentRepository>();
-    private readonly IActivityLogger _activityLogger = Substitute.For<IActivityLogger>();
-    private readonly ICurrentUserService _currentUserService = Substitute.For<ICurrentUserService>();
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
     private readonly DeleteComponentCommandHandler _handler;
 
     public DeleteComponentCommandHandlerTests()
     {
-        _handler = new DeleteComponentCommandHandler(_componentRepository, _activityLogger, _currentUserService, _unitOfWork);
+        _handler = new DeleteComponentCommandHandler(_componentRepository, _unitOfWork);
     }
 
     [Fact]

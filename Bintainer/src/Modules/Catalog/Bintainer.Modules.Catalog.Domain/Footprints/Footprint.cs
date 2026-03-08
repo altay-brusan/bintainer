@@ -10,15 +10,21 @@ public sealed class Footprint : Entity
 
     public static Footprint Create(string name)
     {
-        return new Footprint
+        var footprint = new Footprint
         {
             Id = Guid.NewGuid(),
             Name = name
         };
+
+        footprint.Raise(new FootprintCreatedDomainEvent(footprint.Id, name));
+
+        return footprint;
     }
 
     public void Update(string name)
     {
         Name = name;
+
+        Raise(new FootprintUpdatedDomainEvent(Id, name));
     }
 }

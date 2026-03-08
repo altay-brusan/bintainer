@@ -1,5 +1,3 @@
-using Bintainer.Common.Application.ActivityLog;
-using Bintainer.Common.Application.Authorization;
 using Bintainer.Common.Application.Messaging;
 using Bintainer.Common.Domain;
 using Bintainer.Modules.Inventory.Application.Abstractions.Data;
@@ -9,9 +7,7 @@ namespace Bintainer.Modules.Inventory.Application.Bins.DeactivateBin;
 
 internal sealed class DeactivateBinCommandHandler(
     IBinRepository binRepository,
-    IUnitOfWork unitOfWork,
-    IActivityLogger activityLogger,
-    ICurrentUserService currentUserService) : ICommandHandler<DeactivateBinCommand>
+    IUnitOfWork unitOfWork) : ICommandHandler<DeactivateBinCommand>
 {
     public async Task<Result> Handle(DeactivateBinCommand request, CancellationToken cancellationToken)
     {
@@ -30,13 +26,6 @@ internal sealed class DeactivateBinCommandHandler(
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
-
-        await activityLogger.LogAsync(
-            currentUserService.UserId,
-            "BinDeactivated",
-            "Bin",
-            bin.Id,
-            ct: cancellationToken);
 
         return Result.Success();
     }

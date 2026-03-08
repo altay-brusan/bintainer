@@ -1,4 +1,3 @@
-using Bintainer.Common.Application.ActivityLog;
 using Bintainer.Common.Application.Authorization;
 using Bintainer.Common.Application.Messaging;
 using Bintainer.Common.Domain;
@@ -15,8 +14,7 @@ internal sealed class MoveComponentCommandHandler(
     ICompartmentRepository compartmentRepository,
     IMovementRepository movementRepository,
     ICurrentUserService currentUserService,
-    IUnitOfWork unitOfWork,
-    IActivityLogger activityLogger) : ICommandHandler<MoveComponentCommand>
+    IUnitOfWork unitOfWork) : ICommandHandler<MoveComponentCommand>
 {
     public async Task<Result> Handle(MoveComponentCommand request, CancellationToken cancellationToken)
     {
@@ -81,15 +79,10 @@ internal sealed class MoveComponentCommandHandler(
 
         movementRepository.Insert(movement);
 
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+        movement.Raise(new ComponentMovedDomainEvent(
+            request.ComponentId, request.SourceCompartmentId, request.DestinationCompartmentId, request.Quantity));
 
-        await activityLogger.LogAsync(
-            currentUserService.UserId,
-            "ComponentMoved",
-            "Component",
-            request.ComponentId,
-            details: new { request.SourceCompartmentId, request.DestinationCompartmentId, request.Quantity },
-            ct: cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();
     }

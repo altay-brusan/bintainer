@@ -1,5 +1,3 @@
-using Bintainer.Common.Application.ActivityLog;
-using Bintainer.Common.Application.Authorization;
 using Bintainer.Common.Application.Messaging;
 using Bintainer.Common.Domain;
 using Bintainer.Modules.Inventory.Application.Abstractions.Data;
@@ -9,9 +7,7 @@ namespace Bintainer.Modules.Inventory.Application.Compartments.DeactivateCompart
 
 internal sealed class DeactivateCompartmentCommandHandler(
     ICompartmentRepository compartmentRepository,
-    IUnitOfWork unitOfWork,
-    IActivityLogger activityLogger,
-    ICurrentUserService currentUserService) : ICommandHandler<DeactivateCompartmentCommand>
+    IUnitOfWork unitOfWork) : ICommandHandler<DeactivateCompartmentCommand>
 {
     public async Task<Result> Handle(DeactivateCompartmentCommand request, CancellationToken cancellationToken)
     {
@@ -30,13 +26,6 @@ internal sealed class DeactivateCompartmentCommandHandler(
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
-
-        await activityLogger.LogAsync(
-            currentUserService.UserId,
-            "CompartmentDeactivated",
-            "Compartment",
-            compartment.Id,
-            ct: cancellationToken);
 
         return Result.Success();
     }

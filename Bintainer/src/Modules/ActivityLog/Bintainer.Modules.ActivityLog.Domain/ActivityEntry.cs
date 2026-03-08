@@ -9,6 +9,7 @@ public sealed class ActivityEntry : Entity
     public string EntityType { get; private set; } = string.Empty;
     public Guid EntityId { get; private set; }
     public string? EntityName { get; private set; }
+    public string? Message { get; private set; }
     public string? Details { get; private set; }
     public DateTime Timestamp { get; private set; }
 
@@ -20,6 +21,7 @@ public sealed class ActivityEntry : Entity
         string entityType,
         Guid entityId,
         string? entityName,
+        string? message,
         string? details)
     {
         return new ActivityEntry
@@ -30,6 +32,7 @@ public sealed class ActivityEntry : Entity
             EntityType = entityType,
             EntityId = entityId,
             EntityName = entityName,
+            Message = message,
             Details = details,
             Timestamp = DateTime.UtcNow
         };
