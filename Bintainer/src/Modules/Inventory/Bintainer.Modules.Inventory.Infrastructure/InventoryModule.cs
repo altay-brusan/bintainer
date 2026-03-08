@@ -3,7 +3,6 @@ using Bintainer.Common.Presentation.Endpoints;
 using Bintainer.Modules.Inventory.Application.Abstractions.Data;
 using Bintainer.Modules.Inventory.Application.Inventories;
 using Bintainer.Modules.Inventory.Application.Movements;
-using Bintainer.Modules.Inventory.Application.Reports;
 using Bintainer.Modules.Inventory.Application.StorageUnits;
 using Bintainer.Modules.Inventory.Domain.Bins;
 using Bintainer.Modules.Inventory.Domain.Compartments;
@@ -16,7 +15,6 @@ using Bintainer.Modules.Inventory.Infrastructure.Consumers;
 using Bintainer.Modules.Inventory.Infrastructure.Database;
 using Bintainer.Modules.Inventory.Infrastructure.Inventories;
 using Bintainer.Modules.Inventory.Infrastructure.Movements;
-using Bintainer.Modules.Inventory.Infrastructure.Reports;
 using Bintainer.Modules.Inventory.Infrastructure.StorageUnits;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
@@ -48,7 +46,6 @@ public static class InventoryModule
         services.AddScoped<ICompartmentRepository, CompartmentRepository>();
         services.AddScoped<IMovementRepository, MovementRepository>();
 
-        services.AddScoped<IReportReadService, ReportReadService>();
         services.AddScoped<IInventoryReadService, InventoryReadService>();
         services.AddScoped<IStorageUnitReadService, StorageUnitReadService>();
         services.AddScoped<IMovementReadService, MovementReadService>();

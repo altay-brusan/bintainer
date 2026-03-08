@@ -1,0 +1,23 @@
+using Bintainer.Common.Presentation.Endpoints;
+using Bintainer.Common.Presentation.Results;
+using Bintainer.Modules.Reports.Application.GetTopComponents;
+using MediatR;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
+
+namespace Bintainer.Modules.Reports.Presentation;
+
+internal sealed class GetTopComponents : IEndpoint
+{
+    public void MapEndpoint(IEndpointRouteBuilder app)
+    {
+        app.MapGet("api/reports/top-components", async (string? sortBy, int? limit, ISender sender) =>
+        {
+            var result = await sender.Send(new GetTopComponentsQuery(sortBy, limit ?? 10));
+            return result.Match(Results.Ok, ApiResults.Problem);
+        })
+        .RequireAuthorization()
+        .WithTags("Reports");
+    }
+}

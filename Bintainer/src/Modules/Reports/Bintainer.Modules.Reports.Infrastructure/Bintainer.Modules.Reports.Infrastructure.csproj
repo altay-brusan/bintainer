@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Common\Bintainer.Common.Infrastructure\Bintainer.Common.Infrastructure.csproj" />
+    <ProjectReference Include="..\Bintainer.Modules.Reports.Application\Bintainer.Modules.Reports.Application.csproj" />
+    <ProjectReference Include="..\Bintainer.Modules.Reports.Presentation\Bintainer.Modules.Reports.Presentation.csproj" />
+  </ItemGroup>
+
+</Project>

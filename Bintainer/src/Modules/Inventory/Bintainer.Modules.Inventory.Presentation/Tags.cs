@@ -8,5 +8,4 @@ internal static class Tags
     internal const string Components = "Components";
     internal const string Compartments = "Compartments";
     internal const string Movements = "Movements";
-    internal const string Reports = "Reports";
 }

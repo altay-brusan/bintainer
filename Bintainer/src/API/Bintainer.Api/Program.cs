@@ -6,6 +6,7 @@ using Bintainer.Common.Presentation.Endpoints;
 using Bintainer.Modules.ActivityLog.Infrastructure;
 using Bintainer.Modules.Catalog.Infrastructure;
 using Bintainer.Modules.Inventory.Infrastructure;
+using Bintainer.Modules.Reports.Infrastructure;
 using Bintainer.Modules.Users.Infrastructure;
 using Microsoft.OpenApi.Models;
 using Serilog;
@@ -70,7 +71,8 @@ builder.Services.AddApplication([
     Bintainer.Modules.Users.Application.AssemblyReference.Assembly,
     Bintainer.Modules.Inventory.Application.AssemblyReference.Assembly,
     Bintainer.Modules.Catalog.Application.AssemblyReference.Assembly,
-    Bintainer.Modules.ActivityLog.Application.AssemblyReference.Assembly
+    Bintainer.Modules.ActivityLog.Application.AssemblyReference.Assembly,
+    Bintainer.Modules.Reports.Application.AssemblyReference.Assembly
 ]);
 
 string connectionString = builder.Configuration.GetConnectionString("DefaultConnection")!;
@@ -80,6 +82,7 @@ builder.Services.AddUsersModule(builder.Configuration);
 builder.Services.AddInventoryModule(builder.Configuration);
 builder.Services.AddCatalogModule(builder.Configuration);
 builder.Services.AddActivityLogModule(builder.Configuration);
+builder.Services.AddReportsModule(builder.Configuration);
 
 WebApplication app = builder.Build();
 

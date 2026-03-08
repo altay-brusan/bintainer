@@ -36,14 +36,18 @@ Bintainer.slnx (.NET 9 — Clean Architecture modular monolith)
 │   └── Bintainer.Modules.Users.Infrastructure  — UsersDbContext, Identity, JWT
 ├── src/Modules/Inventory/
 │   ├── Bintainer.Modules.Inventory.Domain          — Inventory, StorageUnit, Bin, Compartment, Movement entities
-│   ├── Bintainer.Modules.Inventory.Application     — CRUD for inventories, storage units, compartments; component qty/move; movements; reports
-│   ├── Bintainer.Modules.Inventory.Presentation    — Endpoints (api/inventories/*, api/storage-units/*, api/compartments/*, api/components/*/quantity|move, api/movements, api/reports/*)
+│   ├── Bintainer.Modules.Inventory.Application     — CRUD for inventories, storage units, compartments; component qty/move; movements
+│   ├── Bintainer.Modules.Inventory.Presentation    — Endpoints (api/inventories/*, api/storage-units/*, api/compartments/*, api/components/*/quantity|move, api/movements)
 │   └── Bintainer.Modules.Inventory.Infrastructure  — InventoryDbContext, EF configs, repositories
 ├── src/Modules/Catalog/
 │   ├── Bintainer.Modules.Catalog.Domain            — Component, Category, Footprint, BomImport entities
 │   ├── Bintainer.Modules.Catalog.Application       — Component CRUD + search + image upload; categories; footprints; tags; BOM import
 │   ├── Bintainer.Modules.Catalog.Presentation      — Endpoints (api/components/*, api/categories/*, api/footprints/*, api/tags, api/bom/*)
 │   └── Bintainer.Modules.Catalog.Infrastructure    — CatalogDbContext, file storage, repositories
+├── src/Modules/Reports/
+│   ├── Bintainer.Modules.Reports.Application       — Report queries (summary, top components, low stock, utilization, timeline, distributions)
+│   ├── Bintainer.Modules.Reports.Presentation      — Endpoints (api/reports/*)
+│   └── Bintainer.Modules.Reports.Infrastructure    — ReportReadService (Dapper, cross-schema queries)
 ├── src/Modules/ActivityLog/
 │   ├── Bintainer.Modules.ActivityLog.Domain         — ActivityEntry entity
 │   ├── Bintainer.Modules.ActivityLog.Application    — GetActivityLog query, IActivityLogReadService
@@ -101,6 +105,7 @@ All services registered as **scoped**. Module registration via extension methods
 - `AddInventoryModule(config)` — Inventory DbContext, repos
 - `AddCatalogModule(config)` — Catalog DbContext, component repos, file storage
 - `AddActivityLogModule(config)` — ActivityLog DbContext, ActivityLogger, read service
+- `AddReportsModule(config)` — ReportReadService (no DbContext, uses Dapper with IDbConnectionFactory)
 
 ## External Services
 
