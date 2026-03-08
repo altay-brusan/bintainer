@@ -1,5 +1,4 @@
 using Bintainer.Modules.Inventory.Domain.Compartments;
-using Bintainer.Modules.Inventory.Domain.Components;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -15,10 +14,6 @@ internal sealed class CompartmentConfiguration : IEntityTypeConfiguration<Compar
         builder.Property(c => c.Label).HasMaxLength(100);
         builder.Property(c => c.BinId);
         builder.Property(c => c.Quantity).HasDefaultValue(0);
-
-        builder.HasOne<Component>()
-            .WithMany()
-            .HasForeignKey(c => c.ComponentId)
-            .OnDelete(DeleteBehavior.SetNull);
+        builder.Property(c => c.ComponentId);
     }
 }

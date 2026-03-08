@@ -9,6 +9,12 @@
     <Project Path="src/Common/Bintainer.Common.Presentation/Bintainer.Common.Presentation.csproj" />
   </Folder>
   <Folder Name="/Modules/" />
+  <Folder Name="/Modules/Catalog/">
+    <Project Path="src/Modules/Catalog/Bintainer.Modules.Catalog.Application/Bintainer.Modules.Catalog.Application.csproj" />
+    <Project Path="src/Modules/Catalog/Bintainer.Modules.Catalog.Domain/Bintainer.Modules.Catalog.Domain.csproj" />
+    <Project Path="src/Modules/Catalog/Bintainer.Modules.Catalog.Infrastructure/Bintainer.Modules.Catalog.Infrastructure.csproj" />
+    <Project Path="src/Modules/Catalog/Bintainer.Modules.Catalog.Presentation/Bintainer.Modules.Catalog.Presentation.csproj" />
+  </Folder>
   <Folder Name="/Modules/Inventory/">
     <Project Path="src/Modules/Inventory/Bintainer.Modules.Inventory.Application/Bintainer.Modules.Inventory.Application.csproj" />
     <Project Path="src/Modules/Inventory/Bintainer.Modules.Inventory.Domain/Bintainer.Modules.Inventory.Domain.csproj" />
@@ -28,5 +34,7 @@
     <Project Path="tests/Bintainer.Modules.Users.Application.UnitTests/Bintainer.Modules.Users.Application.UnitTests.csproj" />
     <Project Path="tests/Bintainer.Modules.Inventory.Domain.UnitTests/Bintainer.Modules.Inventory.Domain.UnitTests.csproj" />
     <Project Path="tests/Bintainer.Modules.Inventory.Application.UnitTests/Bintainer.Modules.Inventory.Application.UnitTests.csproj" />
+    <Project Path="tests/Bintainer.Modules.Catalog.Domain.UnitTests/Bintainer.Modules.Catalog.Domain.UnitTests.csproj" />
+    <Project Path="tests/Bintainer.Modules.Catalog.Application.UnitTests/Bintainer.Modules.Catalog.Application.UnitTests.csproj" />
   </Folder>
 </Solution>

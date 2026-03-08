@@ -1,14 +1,15 @@
 using Bintainer.Common.Application.Messaging;
 using Bintainer.Common.Domain;
+using Bintainer.Modules.Catalog.Application.Abstractions;
+using Bintainer.Modules.Catalog.Domain.Components;
 using Bintainer.Modules.Inventory.Application.Abstractions.Data;
 using Bintainer.Modules.Inventory.Domain.Compartments;
-using Bintainer.Modules.Inventory.Domain.Components;
 
 namespace Bintainer.Modules.Inventory.Application.Compartments.AssignComponent;
 
 internal sealed class AssignComponentToCompartmentCommandHandler(
     ICompartmentRepository compartmentRepository,
-    IComponentRepository componentRepository,
+    ICatalogApi catalogApi,
     IUnitOfWork unitOfWork) : ICommandHandler<AssignComponentToCompartmentCommand>
 {
     public async Task<Result> Handle(AssignComponentToCompartmentCommand request, CancellationToken cancellationToken)
@@ -20,9 +21,9 @@ internal sealed class AssignComponentToCompartmentCommandHandler(
             return Result.Failure(CompartmentErrors.NotFound(request.CompartmentId));
         }
 
-        Component? component = await componentRepository.GetByIdAsync(request.ComponentId, cancellationToken);
+        bool componentExists = await catalogApi.ComponentExistsAsync(request.ComponentId, cancellationToken);
 
-        if (component is null)
+        if (!componentExists)
         {
             return Result.Failure(ComponentErrors.NotFound(request.ComponentId));
         }

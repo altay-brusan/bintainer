@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Bintainer.Modules.Catalog.Application.UnitTests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Common\Bintainer.Common.Application\Bintainer.Common.Application.csproj" />
+    <ProjectReference Include="..\Bintainer.Modules.Catalog.Domain\Bintainer.Modules.Catalog.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,3 +1,4 @@
+using Bintainer.Modules.Catalog.Infrastructure.Database;
 using Bintainer.Modules.Inventory.Infrastructure.Database;
 using Bintainer.Modules.Users.Domain.Users;
 using Bintainer.Modules.Users.Infrastructure.Database;
@@ -14,6 +15,7 @@ internal static class MigrationExtensions
         {
             ApplyMigration<UsersDbContext>(scope);
             ApplyMigration<InventoryDbContext>(scope);
+            ApplyMigration<CatalogDbContext>(scope);
         }
 
         SeedDefaultAdminAsync(app.ApplicationServices).GetAwaiter().GetResult();

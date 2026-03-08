@@ -3,6 +3,7 @@ using Bintainer.Api.Middleware;
 using Bintainer.Common.Application;
 using Bintainer.Common.Infrastructure;
 using Bintainer.Common.Presentation.Endpoints;
+using Bintainer.Modules.Catalog.Infrastructure;
 using Bintainer.Modules.Inventory.Infrastructure;
 using Bintainer.Modules.Users.Infrastructure;
 using Microsoft.OpenApi.Models;
@@ -13,7 +14,7 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog((context, loggerConfig) =>
     loggerConfig.ReadFrom.Configuration(context.Configuration));
 
-builder.Configuration.AddModuleConfiguration(["users", "inventory"]);
+builder.Configuration.AddModuleConfiguration(["users", "inventory", "catalog"]);
 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
@@ -66,7 +67,8 @@ builder.Services.AddSwaggerGen(options =>
 
 builder.Services.AddApplication([
     Bintainer.Modules.Users.Application.AssemblyReference.Assembly,
-    Bintainer.Modules.Inventory.Application.AssemblyReference.Assembly
+    Bintainer.Modules.Inventory.Application.AssemblyReference.Assembly,
+    Bintainer.Modules.Catalog.Application.AssemblyReference.Assembly
 ]);
 
 string connectionString = builder.Configuration.GetConnectionString("DefaultConnection")!;
@@ -74,6 +76,7 @@ builder.Services.AddInfrastructure(connectionString);
 
 builder.Services.AddUsersModule(builder.Configuration);
 builder.Services.AddInventoryModule(builder.Configuration);
+builder.Services.AddCatalogModule(builder.Configuration);
 
 WebApplication app = builder.Build();
 

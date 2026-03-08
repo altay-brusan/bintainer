@@ -1,4 +1,3 @@
-using Bintainer.Modules.Inventory.Domain.Components;
 using Bintainer.Modules.Inventory.Domain.Compartments;
 using Bintainer.Modules.Inventory.Domain.Movements;
 using Microsoft.EntityFrameworkCore;
@@ -18,10 +17,7 @@ internal sealed class MovementConfiguration : IEntityTypeConfiguration<Movement>
         builder.Property(m => m.UserId);
         builder.Property(m => m.Notes).HasMaxLength(500);
 
-        builder.HasOne<Component>()
-            .WithMany()
-            .HasForeignKey(m => m.ComponentId)
-            .OnDelete(DeleteBehavior.Cascade);
+        builder.Property(m => m.ComponentId);
 
         builder.HasOne<Compartment>()
             .WithMany()

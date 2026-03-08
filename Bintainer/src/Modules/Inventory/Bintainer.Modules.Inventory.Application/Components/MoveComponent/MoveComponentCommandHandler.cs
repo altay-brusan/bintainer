@@ -1,15 +1,16 @@
 using Bintainer.Common.Application.Authorization;
 using Bintainer.Common.Application.Messaging;
 using Bintainer.Common.Domain;
+using Bintainer.Modules.Catalog.Application.Abstractions;
+using Bintainer.Modules.Catalog.Domain.Components;
 using Bintainer.Modules.Inventory.Application.Abstractions.Data;
 using Bintainer.Modules.Inventory.Domain.Compartments;
-using Bintainer.Modules.Inventory.Domain.Components;
 using Bintainer.Modules.Inventory.Domain.Movements;
 
 namespace Bintainer.Modules.Inventory.Application.Components.MoveComponent;
 
 internal sealed class MoveComponentCommandHandler(
-    IComponentRepository componentRepository,
+    ICatalogApi catalogApi,
     ICompartmentRepository compartmentRepository,
     IMovementRepository movementRepository,
     ICurrentUserService currentUserService,
@@ -17,8 +18,8 @@ internal sealed class MoveComponentCommandHandler(
 {
     public async Task<Result> Handle(MoveComponentCommand request, CancellationToken cancellationToken)
     {
-        Component? component = await componentRepository.GetByIdAsync(request.ComponentId, cancellationToken);
-        if (component is null)
+        bool componentExists = await catalogApi.ComponentExistsAsync(request.ComponentId, cancellationToken);
+        if (!componentExists)
         {
             return Result.Failure(ComponentErrors.NotFound(request.ComponentId));
         }
