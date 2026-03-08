@@ -15,5 +15,6 @@ internal sealed class CompartmentConfiguration : IEntityTypeConfiguration<Compar
         builder.Property(c => c.BinId);
         builder.Property(c => c.Quantity).HasDefaultValue(0);
         builder.Property(c => c.ComponentId);
+        builder.Property(c => c.IsActive).HasDefaultValue(true);
     }
 }

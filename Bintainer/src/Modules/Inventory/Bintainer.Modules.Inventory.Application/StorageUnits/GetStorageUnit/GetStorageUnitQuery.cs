@@ -17,6 +17,7 @@ public sealed record BinResponse(
     Guid Id,
     int Column,
     int Row,
+    bool IsActive,
     List<CompartmentResponse> Compartments);
 
 public sealed record CompartmentResponse(
@@ -25,4 +26,5 @@ public sealed record CompartmentResponse(
     string Label,
     Guid? ComponentId,
     string? ComponentPartNumber,
-    int Quantity);
+    int Quantity,
+    bool IsActive);

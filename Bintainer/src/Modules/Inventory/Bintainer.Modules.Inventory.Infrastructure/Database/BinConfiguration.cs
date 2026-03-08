@@ -13,6 +13,7 @@ internal sealed class BinConfiguration : IEntityTypeConfiguration<Bin>
         builder.Property(b => b.Column);
         builder.Property(b => b.Row);
         builder.Property(b => b.StorageUnitId);
+        builder.Property(b => b.IsActive).HasDefaultValue(true);
 
         builder.HasMany(b => b.Compartments)
             .WithOne()

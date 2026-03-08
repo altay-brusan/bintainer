@@ -42,17 +42,30 @@
 
 ---
 
-## 4. Compartments [EXISTS — Inventory Module]
+## 4. Bins [EXISTS — Inventory Module]
+
+| Method | Path | Request Body | Description |
+|--------|------|-------------|-------------|
+| DELETE | `/api/bins/{binId}` | — | Deactivate bin (soft delete). Fails if any compartment has a component. |
+| POST | `/api/bins/{binId}/restore` | — | Reactivate a deactivated bin and all its compartments |
+
+> **Soft delete:** Deactivating a bin sets `IsActive = false` on the bin and all its compartments. Inactive bins/compartments cannot accept components.
+
+---
+
+## 5. Compartments [EXISTS — Inventory Module]
 
 | Method | Path | Request Body | Description |
 |--------|------|-------------|-------------|
 | PUT | `/api/compartments/{compartmentId}/component` | `{ componentId, quantity }` | Assign component to compartment |
 | DELETE | `/api/compartments/{compartmentId}/component` | — | Remove component from compartment |
 | PUT | `/api/compartments/{compartmentId}/label` | `{ label }` | Update compartment label |
+| DELETE | `/api/compartments/{compartmentId}` | — | Deactivate compartment (soft delete). Fails if it has a component. |
+| POST | `/api/compartments/{compartmentId}/restore` | — | Reactivate a deactivated compartment |
 
 ---
 
-## 5. Components — Quantity & Move [EXISTS — Inventory Module]
+## 6. Components — Quantity & Move [EXISTS — Inventory Module]
 
 | Method | Path | Request Body | Description |
 |--------|------|-------------|-------------|
@@ -63,7 +76,7 @@
 
 ---
 
-## 6. Movement History [EXISTS — Inventory Module]
+## 7. Movement History [EXISTS — Inventory Module]
 
 ### `GET /api/movements`
 
@@ -77,7 +90,7 @@
 
 ---
 
-## 7. Reports / Analytics [EXISTS — Inventory Module]
+## 8. Reports / Analytics [EXISTS — Inventory Module]
 
 | Method | Path | Params | Description |
 |--------|------|--------|-------------|
@@ -91,7 +104,7 @@
 
 ---
 
-## 8. Components — CRUD [EXISTS — Catalog Module]
+## 9. Components — CRUD [EXISTS — Catalog Module]
 
 | Method | Path | Description |
 |--------|------|-------------|
@@ -131,7 +144,7 @@
 
 ---
 
-## 9. Component Search [EXISTS — Catalog Module]
+## 10. Component Search [EXISTS — Catalog Module]
 
 ### `GET /api/components/search`
 
@@ -149,7 +162,7 @@ Full-text search across components with filters and pagination.
 
 ---
 
-## 10. Tags Autocomplete [EXISTS — Catalog Module]
+## 11. Tags Autocomplete [EXISTS — Catalog Module]
 
 ### `GET /api/tags`
 
@@ -162,7 +175,7 @@ Returns all unique tags used across components (for autocomplete/filter dropdown
 
 ---
 
-## 11. Component Image Upload [EXISTS — Catalog Module]
+## 12. Component Image Upload [EXISTS — Catalog Module]
 
 ### `POST /api/components/{componentId}/image`
 
@@ -174,7 +187,7 @@ Saves to local filesystem via `LocalFileStorageService`, updates the component's
 
 ---
 
-## 12. Categories [EXISTS — Catalog Module]
+## 13. Categories [EXISTS — Catalog Module]
 
 | Method | Path | Request Body | Description |
 |--------|------|-------------|-------------|
@@ -185,7 +198,7 @@ Saves to local filesystem via `LocalFileStorageService`, updates the component's
 
 ---
 
-## 13. Footprints [EXISTS — Catalog Module]
+## 14. Footprints [EXISTS — Catalog Module]
 
 | Method | Path | Request Body | Description |
 |--------|------|-------------|-------------|
@@ -196,7 +209,7 @@ Saves to local filesystem via `LocalFileStorageService`, updates the component's
 
 ---
 
-## 14. BOM Import [EXISTS — Catalog Module]
+## 15. BOM Import [EXISTS — Catalog Module]
 
 ### `POST /api/bom/import`
 
@@ -224,7 +237,7 @@ List past BOM import records.
 
 ---
 
-## 15. Not Yet Implemented
+## 16. Not Yet Implemented
 
 | Feature | Endpoints | Notes |
 |---------|-----------|-------|
@@ -239,7 +252,7 @@ List past BOM import records.
 | Module | Schema | Endpoints |
 |--------|--------|-----------|
 | **Users** | `users` | `/api/auth/*` |
-| **Inventory** | `inventory` | `/api/inventories/*`, `/api/storage-units/*`, `/api/compartments/*`, `/api/components/{id}/quantity`, `/api/components/{id}/move`, `/api/movements`, `/api/reports/*` |
+| **Inventory** | `inventory` | `/api/inventories/*`, `/api/storage-units/*`, `/api/bins/*`, `/api/compartments/*`, `/api/components/{id}/quantity`, `/api/components/{id}/move`, `/api/movements`, `/api/reports/*` |
 | **Catalog** | `inventory` | `/api/components` (CRUD + search + image), `/api/categories/*`, `/api/footprints/*`, `/api/tags`, `/api/bom/*` |
 
 ---
@@ -249,8 +262,8 @@ List past BOM import records.
 ```
 Inventory (top-level, owned by a User)
   └── StorageUnit (physical shelf/cabinet — Name, Columns, Rows, CompartmentCount)
-        └── Bin (grid cell — Column, Row)
-              └── Compartment (sub-slot — Index, Label, ComponentId?, Quantity)
+        └── Bin (grid cell — Column, Row, IsActive)
+              └── Compartment (sub-slot — Index, Label, ComponentId?, Quantity, IsActive)
 
 Component (catalog entry — PartNumber, Description, Manufacturer, UnitPrice, Tags, Attributes, LowStockThreshold, CategoryId?, FootprintId?)
 Category (hierarchical grouping — Name, ParentId?)

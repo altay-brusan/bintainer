@@ -1,10 +1,12 @@
 using Bintainer.Common.Infrastructure.Interceptors;
 using Bintainer.Common.Presentation.Endpoints;
 using Bintainer.Modules.Inventory.Application.Abstractions.Data;
+using Bintainer.Modules.Inventory.Domain.Bins;
 using Bintainer.Modules.Inventory.Domain.Compartments;
 using Bintainer.Modules.Inventory.Domain.Inventories;
 using Bintainer.Modules.Inventory.Domain.Movements;
 using Bintainer.Modules.Inventory.Domain.StorageUnits;
+using Bintainer.Modules.Inventory.Infrastructure.Bins;
 using Bintainer.Modules.Inventory.Infrastructure.Compartments;
 using Bintainer.Modules.Inventory.Infrastructure.Database;
 using Bintainer.Modules.Inventory.Infrastructure.Inventories;
@@ -35,6 +37,7 @@ public static class InventoryModule
 
         services.AddScoped<IInventoryRepository, InventoryRepository>();
         services.AddScoped<IStorageUnitRepository, StorageUnitRepository>();
+        services.AddScoped<IBinRepository, BinRepository>();
         services.AddScoped<ICompartmentRepository, CompartmentRepository>();
         services.AddScoped<IMovementRepository, MovementRepository>();
 

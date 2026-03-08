@@ -11,6 +11,7 @@ public sealed class Compartment : Entity
     public Guid BinId { get; private set; }
     public Guid? ComponentId { get; private set; }
     public int Quantity { get; private set; }
+    public bool IsActive { get; private set; } = true;
 
     internal static Compartment Create(int index, string label, Guid binId)
     {
@@ -48,5 +49,21 @@ public sealed class Compartment : Entity
     public void UpdateLabel(string label)
     {
         Label = label;
+    }
+
+    public Result Deactivate()
+    {
+        if (ComponentId.HasValue)
+        {
+            return Result.Failure(CompartmentErrors.HasComponent(Id));
+        }
+
+        IsActive = false;
+        return Result.Success();
+    }
+
+    public void Activate()
+    {
+        IsActive = true;
     }
 }

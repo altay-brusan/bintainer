@@ -21,6 +21,11 @@ internal sealed class AssignComponentToCompartmentCommandHandler(
             return Result.Failure(CompartmentErrors.NotFound(request.CompartmentId));
         }
 
+        if (!compartment.IsActive)
+        {
+            return Result.Failure(CompartmentErrors.Inactive);
+        }
+
         bool componentExists = await catalogApi.ComponentExistsAsync(request.ComponentId, cancellationToken);
 
         if (!componentExists)

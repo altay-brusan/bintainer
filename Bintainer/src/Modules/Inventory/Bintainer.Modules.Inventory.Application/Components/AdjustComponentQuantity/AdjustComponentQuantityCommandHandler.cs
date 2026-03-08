@@ -30,6 +30,11 @@ internal sealed class AdjustComponentQuantityCommandHandler(
             return Result.Failure(CompartmentErrors.NotFound(request.CompartmentId));
         }
 
+        if (!compartment.IsActive)
+        {
+            return Result.Failure(CompartmentErrors.Inactive);
+        }
+
         int delta = request.Action switch
         {
             MovementAction.Added or MovementAction.Restocked => request.Quantity,

@@ -20,9 +20,10 @@ internal sealed class GetStorageUnitQueryHandler(
             SELECT
                 su.id AS Id, su.name AS Name, su.columns AS Columns, su.rows AS Rows,
                 su.compartment_count AS CompartmentCount, su.inventory_id AS InventoryId,
-                b.id AS Id, b.column AS Column, b.row AS Row,
+                b.id AS Id, b.column AS Column, b.row AS Row, b.is_active AS IsActive,
                 c.id AS Id, c.index AS Index, c.label AS Label,
-                c.component_id AS ComponentId, p.part_number AS ComponentPartNumber, c.quantity AS Quantity
+                c.component_id AS ComponentId, p.part_number AS ComponentPartNumber, c.quantity AS Quantity,
+                c.is_active AS IsActive
             FROM inventory.storage_units su
             LEFT JOIN inventory.bins b ON b.storage_unit_id = su.id
             LEFT JOIN inventory.compartments c ON c.bin_id = b.id
@@ -48,7 +49,7 @@ internal sealed class GetStorageUnitQueryHandler(
 
                 if (bin is not null && !binDictionary.ContainsKey(bin.Id))
                 {
-                    var binResponse = new BinResponse(bin.Id, bin.Column, bin.Row, []);
+                    var binResponse = new BinResponse(bin.Id, bin.Column, bin.Row, bin.IsActive, []);
                     binDictionary[bin.Id] = binResponse;
                     storageUnit.Bins.Add(binResponse);
                 }
@@ -57,7 +58,8 @@ internal sealed class GetStorageUnitQueryHandler(
                 {
                     existingBin.Compartments.Add(new CompartmentResponse(
                         compartment.Id, compartment.Index, compartment.Label,
-                        compartment.ComponentId, compartment.ComponentPartNumber, compartment.Quantity));
+                        compartment.ComponentId, compartment.ComponentPartNumber, compartment.Quantity,
+                        compartment.IsActive));
                 }
 
                 return storageUnit;
@@ -76,6 +78,6 @@ internal sealed class GetStorageUnitQueryHandler(
     }
 
     private sealed record StorageUnitRow(Guid Id, string Name, int Columns, int Rows, int CompartmentCount, Guid InventoryId);
-    private sealed record BinRow(Guid Id, int Column, int Row);
-    private sealed record CompartmentRow(Guid Id, int Index, string Label, Guid? ComponentId, string? ComponentPartNumber, int Quantity);
+    private sealed record BinRow(Guid Id, int Column, int Row, bool IsActive);
+    private sealed record CompartmentRow(Guid Id, int Index, string Label, Guid? ComponentId, string? ComponentPartNumber, int Quantity, bool IsActive);
 }

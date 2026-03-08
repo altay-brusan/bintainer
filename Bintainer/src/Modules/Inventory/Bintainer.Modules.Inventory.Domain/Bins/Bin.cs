@@ -12,6 +12,7 @@ public sealed class Bin : Entity
     public int Column { get; private set; }
     public int Row { get; private set; }
     public Guid StorageUnitId { get; private set; }
+    public bool IsActive { get; private set; } = true;
     public IReadOnlyCollection<Compartment> Compartments => _compartments.AsReadOnly();
 
     internal static Bin Create(int column, int row, Guid storageUnitId, int compartmentCount)
@@ -31,5 +32,32 @@ public sealed class Bin : Entity
         }
 
         return bin;
+    }
+
+    public Result Deactivate()
+    {
+        if (_compartments.Any(c => c.ComponentId.HasValue))
+        {
+            return Result.Failure(BinErrors.HasComponents(Id));
+        }
+
+        IsActive = false;
+
+        foreach (var compartment in _compartments)
+        {
+            compartment.Deactivate();
+        }
+
+        return Result.Success();
+    }
+
+    public void Activate()
+    {
+        IsActive = true;
+
+        foreach (var compartment in _compartments)
+        {
+            compartment.Activate();
+        }
     }
 }

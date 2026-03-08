@@ -4,6 +4,7 @@ internal static class Tags
 {
     internal const string Inventories = "Inventories";
     internal const string StorageUnits = "StorageUnits";
+    internal const string Bins = "Bins";
     internal const string Components = "Components";
     internal const string Compartments = "Compartments";
     internal const string Movements = "Movements";

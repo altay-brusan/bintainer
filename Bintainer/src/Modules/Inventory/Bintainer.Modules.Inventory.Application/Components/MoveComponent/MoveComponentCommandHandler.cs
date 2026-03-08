@@ -30,10 +30,20 @@ internal sealed class MoveComponentCommandHandler(
             return Result.Failure(CompartmentErrors.NotFound(request.SourceCompartmentId));
         }
 
+        if (!source.IsActive)
+        {
+            return Result.Failure(CompartmentErrors.Inactive);
+        }
+
         Compartment? destination = await compartmentRepository.GetByIdAsync(request.DestinationCompartmentId, cancellationToken);
         if (destination is null)
         {
             return Result.Failure(CompartmentErrors.NotFound(request.DestinationCompartmentId));
+        }
+
+        if (!destination.IsActive)
+        {
+            return Result.Failure(CompartmentErrors.Inactive);
         }
 
         if (source.Quantity < request.Quantity)
