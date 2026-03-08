@@ -3,6 +3,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\Common\Bintainer.Common.Infrastructure\Bintainer.Common.Infrastructure.csproj" />
     <ProjectReference Include="..\Bintainer.Modules.Catalog.Application\Bintainer.Modules.Catalog.Application.csproj" />
+    <ProjectReference Include="..\Bintainer.Modules.Catalog.IntegrationEvents\Bintainer.Modules.Catalog.IntegrationEvents.csproj" />
     <ProjectReference Include="..\Bintainer.Modules.Catalog.Presentation\Bintainer.Modules.Catalog.Presentation.csproj" />
   </ItemGroup>
 

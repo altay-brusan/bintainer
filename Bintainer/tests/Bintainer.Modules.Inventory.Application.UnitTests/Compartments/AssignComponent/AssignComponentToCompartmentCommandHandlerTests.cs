@@ -1,5 +1,5 @@
-using Bintainer.Modules.Catalog.Application.Abstractions;
-using Bintainer.Modules.Catalog.Domain.Components;
+using Bintainer.Modules.Catalog.IntegrationEvents;
+using Bintainer.Modules.Inventory.Domain.Components;
 using Bintainer.Modules.Inventory.Application.Abstractions.Data;
 using Bintainer.Modules.Inventory.Application.Compartments.AssignComponent;
 using Bintainer.Modules.Inventory.Domain.Compartments;

@@ -1,9 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <InternalsVisibleTo Include="Bintainer.Modules.Inventory.Application.UnitTests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\..\Common\Bintainer.Common.Infrastructure\Bintainer.Common.Infrastructure.csproj" />
     <ProjectReference Include="..\Bintainer.Modules.Inventory.Application\Bintainer.Modules.Inventory.Application.csproj" />
     <ProjectReference Include="..\Bintainer.Modules.Inventory.Presentation\Bintainer.Modules.Inventory.Presentation.csproj" />
+    <ProjectReference Include="..\..\Catalog\Bintainer.Modules.Catalog.IntegrationEvents\Bintainer.Modules.Catalog.IntegrationEvents.csproj" />
   </ItemGroup>
 
 </Project>

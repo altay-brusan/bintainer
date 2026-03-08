@@ -7,6 +7,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\Common\Bintainer.Common.Application\Bintainer.Common.Application.csproj" />
     <ProjectReference Include="..\Bintainer.Modules.Catalog.Domain\Bintainer.Modules.Catalog.Domain.csproj" />
+    <ProjectReference Include="..\Bintainer.Modules.Catalog.IntegrationEvents\Bintainer.Modules.Catalog.IntegrationEvents.csproj" />
   </ItemGroup>
 
 </Project>

@@ -19,7 +19,8 @@ public static class InfrastructureConfiguration
 {
     public static IServiceCollection AddInfrastructure(
         this IServiceCollection services,
-        string connectionString)
+        string connectionString,
+        params Action<IRegistrationConfigurator>[] moduleConfigureConsumers)
     {
         var npgsqlDataSource = new NpgsqlDataSourceBuilder(connectionString).Build();
         services.AddSingleton(npgsqlDataSource);
@@ -33,6 +34,11 @@ public static class InfrastructureConfiguration
 
         services.AddMassTransit(config =>
         {
+            foreach (Action<IRegistrationConfigurator> configureConsumers in moduleConfigureConsumers)
+            {
+                configureConsumers(config);
+            }
+
             config.UsingInMemory((context, cfg) =>
             {
                 cfg.ConfigureEndpoints(context);

@@ -1,7 +1,7 @@
 using Bintainer.Common.Infrastructure.Interceptors;
 using Bintainer.Common.Presentation.Endpoints;
-using Bintainer.Modules.Catalog.Application.Abstractions;
 using Bintainer.Modules.Catalog.Application.Abstractions.Data;
+using Bintainer.Modules.Catalog.IntegrationEvents;
 using Bintainer.Modules.Catalog.Application.Abstractions.Storage;
 using Bintainer.Modules.Catalog.Domain.BomImports;
 using Bintainer.Modules.Catalog.Domain.Categories;

@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Modules\Catalog\Bintainer.Modules.Catalog.Application\Bintainer.Modules.Catalog.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Catalog\Bintainer.Modules.Catalog.IntegrationEvents\Bintainer.Modules.Catalog.IntegrationEvents.csproj" />
   </ItemGroup>
 
 </Project>

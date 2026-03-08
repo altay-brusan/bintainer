@@ -1,4 +1,4 @@
-namespace Bintainer.Modules.Catalog.Application.Abstractions;
+namespace Bintainer.Modules.Catalog.IntegrationEvents;
 
 public interface ICatalogApi
 {

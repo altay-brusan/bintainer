@@ -1,4 +1,4 @@
-using Bintainer.Modules.Catalog.Application.Abstractions;
+using Bintainer.Modules.Catalog.IntegrationEvents;
 using Bintainer.Modules.Catalog.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 

@@ -1,8 +1,8 @@
 using Bintainer.Common.Application.Authorization;
 using Bintainer.Common.Application.Messaging;
 using Bintainer.Common.Domain;
-using Bintainer.Modules.Catalog.Application.Abstractions;
-using Bintainer.Modules.Catalog.Domain.Components;
+using Bintainer.Modules.Catalog.IntegrationEvents;
+using Bintainer.Modules.Inventory.Domain.Components;
 using Bintainer.Modules.Inventory.Application.Abstractions.Data;
 using Bintainer.Modules.Inventory.Domain.Compartments;
 using Bintainer.Modules.Inventory.Domain.Movements;

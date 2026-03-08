@@ -8,10 +8,12 @@ using Bintainer.Modules.Inventory.Domain.Movements;
 using Bintainer.Modules.Inventory.Domain.StorageUnits;
 using Bintainer.Modules.Inventory.Infrastructure.Bins;
 using Bintainer.Modules.Inventory.Infrastructure.Compartments;
+using Bintainer.Modules.Inventory.Infrastructure.Consumers;
 using Bintainer.Modules.Inventory.Infrastructure.Database;
 using Bintainer.Modules.Inventory.Infrastructure.Inventories;
 using Bintainer.Modules.Inventory.Infrastructure.Movements;
 using Bintainer.Modules.Inventory.Infrastructure.StorageUnits;
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -42,5 +44,10 @@ public static class InventoryModule
         services.AddScoped<IMovementRepository, MovementRepository>();
 
         return services;
+    }
+
+    public static void ConfigureConsumers(IRegistrationConfigurator registrationConfigurator)
+    {
+        registrationConfigurator.AddConsumer<ComponentDeletedIntegrationEventConsumer>();
     }
 }

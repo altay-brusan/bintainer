@@ -13,6 +13,7 @@
     <Project Path="src/Modules/Catalog/Bintainer.Modules.Catalog.Application/Bintainer.Modules.Catalog.Application.csproj" />
     <Project Path="src/Modules/Catalog/Bintainer.Modules.Catalog.Domain/Bintainer.Modules.Catalog.Domain.csproj" />
     <Project Path="src/Modules/Catalog/Bintainer.Modules.Catalog.Infrastructure/Bintainer.Modules.Catalog.Infrastructure.csproj" />
+    <Project Path="src/Modules/Catalog/Bintainer.Modules.Catalog.IntegrationEvents/Bintainer.Modules.Catalog.IntegrationEvents.csproj" />
     <Project Path="src/Modules/Catalog/Bintainer.Modules.Catalog.Presentation/Bintainer.Modules.Catalog.Presentation.csproj" />
   </Folder>
   <Folder Name="/Modules/Inventory/">

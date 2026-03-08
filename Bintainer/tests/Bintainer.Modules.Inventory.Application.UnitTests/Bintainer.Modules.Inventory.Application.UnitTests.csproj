@@ -2,7 +2,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Modules\Inventory\Bintainer.Modules.Inventory.Application\Bintainer.Modules.Inventory.Application.csproj" />
-    <ProjectReference Include="..\..\src\Modules\Catalog\Bintainer.Modules.Catalog.Application\Bintainer.Modules.Catalog.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Inventory\Bintainer.Modules.Inventory.Infrastructure\Bintainer.Modules.Inventory.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Catalog\Bintainer.Modules.Catalog.IntegrationEvents\Bintainer.Modules.Catalog.IntegrationEvents.csproj" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.0" />
   </ItemGroup>
 
