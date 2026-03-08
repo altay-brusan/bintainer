@@ -1,3 +1,5 @@
+using Bintainer.Common.Application.ActivityLog;
+using Bintainer.Common.Application.Authorization;
 using Bintainer.Common.Application.Messaging;
 using Bintainer.Common.Domain;
 using Bintainer.Modules.Catalog.Application.Abstractions.Data;
@@ -7,6 +9,8 @@ namespace Bintainer.Modules.Catalog.Application.Categories.DeleteCategory;
 
 internal sealed class DeleteCategoryCommandHandler(
     ICategoryRepository categoryRepository,
+    IActivityLogger activityLogger,
+    ICurrentUserService currentUserService,
     IUnitOfWork unitOfWork) : ICommandHandler<DeleteCategoryCommand>
 {
     public async Task<Result> Handle(DeleteCategoryCommand request, CancellationToken cancellationToken)
@@ -28,6 +32,13 @@ internal sealed class DeleteCategoryCommandHandler(
         categoryRepository.Remove(category);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await activityLogger.LogAsync(
+            currentUserService.UserId,
+            "CategoryDeleted",
+            "Category",
+            category.Id,
+            ct: cancellationToken);
 
         return Result.Success();
     }

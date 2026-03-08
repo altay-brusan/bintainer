@@ -1,3 +1,5 @@
+using Bintainer.Common.Application.ActivityLog;
+using Bintainer.Common.Application.Authorization;
 using Bintainer.Modules.Inventory.Application.Abstractions.Data;
 using Bintainer.Modules.Inventory.Application.StorageUnits.DeleteStorageUnit;
 using Bintainer.Modules.Inventory.Domain.StorageUnits;
@@ -8,11 +10,14 @@ public class DeleteStorageUnitCommandHandlerTests
 {
     private readonly IStorageUnitRepository _storageUnitRepository = Substitute.For<IStorageUnitRepository>();
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
+    private readonly IActivityLogger _activityLogger = Substitute.For<IActivityLogger>();
+    private readonly ICurrentUserService _currentUserService = Substitute.For<ICurrentUserService>();
     private readonly DeleteStorageUnitCommandHandler _handler;
 
     public DeleteStorageUnitCommandHandlerTests()
     {
-        _handler = new DeleteStorageUnitCommandHandler(_storageUnitRepository, _unitOfWork);
+        _handler = new DeleteStorageUnitCommandHandler(
+            _storageUnitRepository, _unitOfWork, _activityLogger, _currentUserService);
     }
 
     [Fact]

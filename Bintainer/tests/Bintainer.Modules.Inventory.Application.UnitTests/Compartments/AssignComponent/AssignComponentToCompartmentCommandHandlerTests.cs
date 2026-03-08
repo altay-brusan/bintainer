@@ -1,3 +1,5 @@
+using Bintainer.Common.Application.ActivityLog;
+using Bintainer.Common.Application.Authorization;
 using Bintainer.Modules.Catalog.IntegrationEvents;
 using Bintainer.Modules.Inventory.Domain.Components;
 using Bintainer.Modules.Inventory.Application.Abstractions.Data;
@@ -12,12 +14,14 @@ public class AssignComponentToCompartmentCommandHandlerTests
     private readonly ICompartmentRepository _compartmentRepository = Substitute.For<ICompartmentRepository>();
     private readonly ICatalogApi _catalogApi = Substitute.For<ICatalogApi>();
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
+    private readonly IActivityLogger _activityLogger = Substitute.For<IActivityLogger>();
+    private readonly ICurrentUserService _currentUserService = Substitute.For<ICurrentUserService>();
     private readonly AssignComponentToCompartmentCommandHandler _handler;
 
     public AssignComponentToCompartmentCommandHandlerTests()
     {
         _handler = new AssignComponentToCompartmentCommandHandler(
-            _compartmentRepository, _catalogApi, _unitOfWork);
+            _compartmentRepository, _catalogApi, _unitOfWork, _activityLogger, _currentUserService);
     }
 
     private static Compartment CreateCompartment()

@@ -1,3 +1,4 @@
+using Bintainer.Common.Application.ActivityLog;
 using Bintainer.Common.Application.Authorization;
 using Bintainer.Common.Application.Messaging;
 using Bintainer.Common.Domain;
@@ -12,9 +13,9 @@ namespace Bintainer.Modules.Inventory.Application.Components.AdjustComponentQuan
 internal sealed class AdjustComponentQuantityCommandHandler(
     ICatalogApi catalogApi,
     ICompartmentRepository compartmentRepository,
-    IMovementRepository movementRepository,
     ICurrentUserService currentUserService,
-    IUnitOfWork unitOfWork) : ICommandHandler<AdjustComponentQuantityCommand>
+    IUnitOfWork unitOfWork,
+    IActivityLogger activityLogger) : ICommandHandler<AdjustComponentQuantityCommand>
 {
     public async Task<Result> Handle(AdjustComponentQuantityCommand request, CancellationToken cancellationToken)
     {
@@ -60,18 +61,15 @@ internal sealed class AdjustComponentQuantityCommandHandler(
             }
         }
 
-        var movement = Movement.Create(
-            request.ComponentId,
-            request.Action,
-            request.Quantity,
-            request.CompartmentId,
-            null,
-            currentUserService.UserId,
-            request.Notes);
-
-        movementRepository.Insert(movement);
-
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await activityLogger.LogAsync(
+            currentUserService.UserId,
+            "QuantityAdjusted",
+            "Component",
+            request.ComponentId,
+            details: new { request.CompartmentId, request.Action, request.Quantity, request.Notes },
+            ct: cancellationToken);
 
         return Result.Success();
     }

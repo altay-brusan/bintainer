@@ -1,3 +1,5 @@
+using Bintainer.Common.Application.ActivityLog;
+using Bintainer.Common.Application.Authorization;
 using Bintainer.Common.Application.Messaging;
 using Bintainer.Common.Domain;
 using Bintainer.Modules.Inventory.Application.Abstractions.Data;
@@ -9,7 +11,9 @@ namespace Bintainer.Modules.Inventory.Application.StorageUnits.CreateStorageUnit
 internal sealed class CreateStorageUnitCommandHandler(
     IInventoryRepository inventoryRepository,
     IStorageUnitRepository storageUnitRepository,
-    IUnitOfWork unitOfWork) : ICommandHandler<CreateStorageUnitCommand, Guid>
+    IUnitOfWork unitOfWork,
+    IActivityLogger activityLogger,
+    ICurrentUserService currentUserService) : ICommandHandler<CreateStorageUnitCommand, Guid>
 {
     public async Task<Result<Guid>> Handle(CreateStorageUnitCommand request, CancellationToken cancellationToken)
     {
@@ -31,6 +35,14 @@ internal sealed class CreateStorageUnitCommandHandler(
         storageUnitRepository.Insert(storageUnit);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await activityLogger.LogAsync(
+            currentUserService.UserId,
+            "StorageUnitCreated",
+            "StorageUnit",
+            storageUnit.Id,
+            request.Name,
+            ct: cancellationToken);
 
         return storageUnit.Id;
     }

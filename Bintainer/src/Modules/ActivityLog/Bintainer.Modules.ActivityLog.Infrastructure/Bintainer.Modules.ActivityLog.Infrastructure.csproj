@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Common\Bintainer.Common.Infrastructure\Bintainer.Common.Infrastructure.csproj" />
+    <ProjectReference Include="..\Bintainer.Modules.ActivityLog.Application\Bintainer.Modules.ActivityLog.Application.csproj" />
+    <ProjectReference Include="..\Bintainer.Modules.ActivityLog.Presentation\Bintainer.Modules.ActivityLog.Presentation.csproj" />
+  </ItemGroup>
+
+</Project>

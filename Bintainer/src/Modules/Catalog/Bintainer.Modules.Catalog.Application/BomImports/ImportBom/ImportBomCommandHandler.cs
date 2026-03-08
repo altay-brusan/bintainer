@@ -1,3 +1,4 @@
+using Bintainer.Common.Application.ActivityLog;
 using Bintainer.Common.Application.Authorization;
 using Bintainer.Common.Application.Messaging;
 using Bintainer.Common.Domain;
@@ -10,6 +11,7 @@ namespace Bintainer.Modules.Catalog.Application.BomImports.ImportBom;
 internal sealed class ImportBomCommandHandler(
     IComponentRepository componentRepository,
     IBomImportRepository bomImportRepository,
+    IActivityLogger activityLogger,
     ICurrentUserService currentUserService,
     IUnitOfWork unitOfWork) : ICommandHandler<ImportBomCommand, ImportBomResponse>
 {
@@ -52,6 +54,15 @@ internal sealed class ImportBomCommandHandler(
         bomImportRepository.Insert(bomImport);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await activityLogger.LogAsync(
+            currentUserService.UserId,
+            "BomImported",
+            "BomImport",
+            bomImport.Id,
+            request.FileName,
+            details: new { request.Lines.Count },
+            ct: cancellationToken);
 
         return new ImportBomResponse(
             bomImport.Id,

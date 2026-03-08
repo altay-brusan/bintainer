@@ -1,3 +1,5 @@
+using Bintainer.Common.Application.ActivityLog;
+using Bintainer.Common.Application.Authorization;
 using Bintainer.Common.Application.Messaging;
 using Bintainer.Common.Domain;
 using Bintainer.Modules.Catalog.Application.Abstractions.Data;
@@ -7,6 +9,8 @@ namespace Bintainer.Modules.Catalog.Application.Categories.UpdateCategory;
 
 internal sealed class UpdateCategoryCommandHandler(
     ICategoryRepository categoryRepository,
+    IActivityLogger activityLogger,
+    ICurrentUserService currentUserService,
     IUnitOfWork unitOfWork) : ICommandHandler<UpdateCategoryCommand>
 {
     public async Task<Result> Handle(UpdateCategoryCommand request, CancellationToken cancellationToken)
@@ -51,6 +55,14 @@ internal sealed class UpdateCategoryCommandHandler(
         category.Update(request.Name, request.ParentId);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await activityLogger.LogAsync(
+            currentUserService.UserId,
+            "CategoryUpdated",
+            "Category",
+            category.Id,
+            request.Name,
+            ct: cancellationToken);
 
         return Result.Success();
     }

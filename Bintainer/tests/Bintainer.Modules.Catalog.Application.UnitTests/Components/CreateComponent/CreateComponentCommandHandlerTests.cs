@@ -1,3 +1,5 @@
+using Bintainer.Common.Application.ActivityLog;
+using Bintainer.Common.Application.Authorization;
 using Bintainer.Modules.Catalog.Application.Abstractions.Data;
 using Bintainer.Modules.Catalog.Application.Components.CreateComponent;
 using Bintainer.Modules.Catalog.Domain.Categories;
@@ -11,13 +13,15 @@ public class CreateComponentCommandHandlerTests
     private readonly IComponentRepository _componentRepository = Substitute.For<IComponentRepository>();
     private readonly ICategoryRepository _categoryRepository = Substitute.For<ICategoryRepository>();
     private readonly IFootprintRepository _footprintRepository = Substitute.For<IFootprintRepository>();
+    private readonly IActivityLogger _activityLogger = Substitute.For<IActivityLogger>();
+    private readonly ICurrentUserService _currentUserService = Substitute.For<ICurrentUserService>();
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
     private readonly CreateComponentCommandHandler _handler;
 
     public CreateComponentCommandHandlerTests()
     {
         _handler = new CreateComponentCommandHandler(
-            _componentRepository, _categoryRepository, _footprintRepository, _unitOfWork);
+            _componentRepository, _categoryRepository, _footprintRepository, _activityLogger, _currentUserService, _unitOfWork);
     }
 
     [Fact]

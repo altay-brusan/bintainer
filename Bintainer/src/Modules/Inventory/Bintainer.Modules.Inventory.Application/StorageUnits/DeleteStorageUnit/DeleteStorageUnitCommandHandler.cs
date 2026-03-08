@@ -1,3 +1,5 @@
+using Bintainer.Common.Application.ActivityLog;
+using Bintainer.Common.Application.Authorization;
 using Bintainer.Common.Application.Messaging;
 using Bintainer.Common.Domain;
 using Bintainer.Modules.Inventory.Application.Abstractions.Data;
@@ -7,7 +9,9 @@ namespace Bintainer.Modules.Inventory.Application.StorageUnits.DeleteStorageUnit
 
 internal sealed class DeleteStorageUnitCommandHandler(
     IStorageUnitRepository storageUnitRepository,
-    IUnitOfWork unitOfWork) : ICommandHandler<DeleteStorageUnitCommand>
+    IUnitOfWork unitOfWork,
+    IActivityLogger activityLogger,
+    ICurrentUserService currentUserService) : ICommandHandler<DeleteStorageUnitCommand>
 {
     public async Task<Result> Handle(DeleteStorageUnitCommand request, CancellationToken cancellationToken)
     {
@@ -24,6 +28,13 @@ internal sealed class DeleteStorageUnitCommandHandler(
         storageUnitRepository.Remove(storageUnit);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await activityLogger.LogAsync(
+            currentUserService.UserId,
+            "StorageUnitDeleted",
+            "StorageUnit",
+            storageUnit.Id,
+            ct: cancellationToken);
 
         return Result.Success();
     }

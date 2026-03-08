@@ -1,3 +1,5 @@
+using Bintainer.Common.Application.ActivityLog;
+using Bintainer.Common.Application.Authorization;
 using Bintainer.Modules.Catalog.Application.Abstractions.Data;
 using Bintainer.Modules.Catalog.Application.Categories.UpdateCategory;
 using Bintainer.Modules.Catalog.Domain.Categories;
@@ -7,12 +9,14 @@ namespace Bintainer.Modules.Catalog.Application.UnitTests.Categories.UpdateCateg
 public class UpdateCategoryCommandHandlerTests
 {
     private readonly ICategoryRepository _categoryRepository = Substitute.For<ICategoryRepository>();
+    private readonly IActivityLogger _activityLogger = Substitute.For<IActivityLogger>();
+    private readonly ICurrentUserService _currentUserService = Substitute.For<ICurrentUserService>();
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
     private readonly UpdateCategoryCommandHandler _handler;
 
     public UpdateCategoryCommandHandlerTests()
     {
-        _handler = new UpdateCategoryCommandHandler(_categoryRepository, _unitOfWork);
+        _handler = new UpdateCategoryCommandHandler(_categoryRepository, _activityLogger, _currentUserService, _unitOfWork);
     }
 
     [Fact]

@@ -1,3 +1,5 @@
+using Bintainer.Common.Application.ActivityLog;
+using Bintainer.Common.Application.Authorization;
 using Bintainer.Common.Application.Messaging;
 using Bintainer.Common.Domain;
 using Bintainer.Modules.Inventory.Application.Abstractions.Data;
@@ -7,7 +9,9 @@ namespace Bintainer.Modules.Inventory.Application.Compartments.UpdateLabel;
 
 internal sealed class UpdateCompartmentLabelCommandHandler(
     ICompartmentRepository compartmentRepository,
-    IUnitOfWork unitOfWork) : ICommandHandler<UpdateCompartmentLabelCommand>
+    IUnitOfWork unitOfWork,
+    IActivityLogger activityLogger,
+    ICurrentUserService currentUserService) : ICommandHandler<UpdateCompartmentLabelCommand>
 {
     public async Task<Result> Handle(UpdateCompartmentLabelCommand request, CancellationToken cancellationToken)
     {
@@ -21,6 +25,14 @@ internal sealed class UpdateCompartmentLabelCommandHandler(
         compartment.UpdateLabel(request.Label);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await activityLogger.LogAsync(
+            currentUserService.UserId,
+            "CompartmentLabelUpdated",
+            "Compartment",
+            compartment.Id,
+            request.Label,
+            ct: cancellationToken);
 
         return Result.Success();
     }

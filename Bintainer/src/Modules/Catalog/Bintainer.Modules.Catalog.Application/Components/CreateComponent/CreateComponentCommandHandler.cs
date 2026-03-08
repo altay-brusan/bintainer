@@ -1,3 +1,5 @@
+using Bintainer.Common.Application.ActivityLog;
+using Bintainer.Common.Application.Authorization;
 using Bintainer.Common.Application.Messaging;
 using Bintainer.Common.Domain;
 using Bintainer.Modules.Catalog.Application.Abstractions.Data;
@@ -11,6 +13,8 @@ internal sealed class CreateComponentCommandHandler(
     IComponentRepository componentRepository,
     ICategoryRepository categoryRepository,
     IFootprintRepository footprintRepository,
+    IActivityLogger activityLogger,
+    ICurrentUserService currentUserService,
     IUnitOfWork unitOfWork) : ICommandHandler<CreateComponentCommand, Guid>
 {
     public async Task<Result<Guid>> Handle(CreateComponentCommand request, CancellationToken cancellationToken)
@@ -53,6 +57,14 @@ internal sealed class CreateComponentCommandHandler(
         componentRepository.Insert(component);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await activityLogger.LogAsync(
+            currentUserService.UserId,
+            "ComponentCreated",
+            "Component",
+            component.Id,
+            request.PartNumber,
+            ct: cancellationToken);
 
         return component.Id;
     }

@@ -1,3 +1,5 @@
+using Bintainer.Common.Application.ActivityLog;
+using Bintainer.Common.Application.Authorization;
 using Bintainer.Modules.Inventory.Application.Abstractions.Data;
 using Bintainer.Modules.Inventory.Application.Compartments.UpdateLabel;
 using Bintainer.Modules.Inventory.Domain.Compartments;
@@ -9,11 +11,14 @@ public class UpdateCompartmentLabelCommandHandlerTests
 {
     private readonly ICompartmentRepository _compartmentRepository = Substitute.For<ICompartmentRepository>();
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
+    private readonly IActivityLogger _activityLogger = Substitute.For<IActivityLogger>();
+    private readonly ICurrentUserService _currentUserService = Substitute.For<ICurrentUserService>();
     private readonly UpdateCompartmentLabelCommandHandler _handler;
 
     public UpdateCompartmentLabelCommandHandlerTests()
     {
-        _handler = new UpdateCompartmentLabelCommandHandler(_compartmentRepository, _unitOfWork);
+        _handler = new UpdateCompartmentLabelCommandHandler(
+            _compartmentRepository, _unitOfWork, _activityLogger, _currentUserService);
     }
 
     [Fact]

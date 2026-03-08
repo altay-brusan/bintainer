@@ -13,6 +13,7 @@
     <ProjectReference Include="..\..\Modules\Users\Bintainer.Modules.Users.Infrastructure\Bintainer.Modules.Users.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Inventory\Bintainer.Modules.Inventory.Infrastructure\Bintainer.Modules.Inventory.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Catalog\Bintainer.Modules.Catalog.Infrastructure\Bintainer.Modules.Catalog.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\ActivityLog\Bintainer.Modules.ActivityLog.Infrastructure\Bintainer.Modules.ActivityLog.Infrastructure.csproj" />
   </ItemGroup>
 
   <ProjectExtensions><VisualStudio><UserProperties appsettings_1json__JsonSchema="https://www.schemastore.org/appsscript.json" /></VisualStudio></ProjectExtensions>

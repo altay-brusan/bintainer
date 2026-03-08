@@ -9,6 +9,12 @@
     <Project Path="src/Common/Bintainer.Common.Presentation/Bintainer.Common.Presentation.csproj" />
   </Folder>
   <Folder Name="/Modules/" />
+  <Folder Name="/Modules/ActivityLog/">
+    <Project Path="src/Modules/ActivityLog/Bintainer.Modules.ActivityLog.Application/Bintainer.Modules.ActivityLog.Application.csproj" />
+    <Project Path="src/Modules/ActivityLog/Bintainer.Modules.ActivityLog.Domain/Bintainer.Modules.ActivityLog.Domain.csproj" />
+    <Project Path="src/Modules/ActivityLog/Bintainer.Modules.ActivityLog.Infrastructure/Bintainer.Modules.ActivityLog.Infrastructure.csproj" />
+    <Project Path="src/Modules/ActivityLog/Bintainer.Modules.ActivityLog.Presentation/Bintainer.Modules.ActivityLog.Presentation.csproj" />
+  </Folder>
   <Folder Name="/Modules/Catalog/">
     <Project Path="src/Modules/Catalog/Bintainer.Modules.Catalog.Application/Bintainer.Modules.Catalog.Application.csproj" />
     <Project Path="src/Modules/Catalog/Bintainer.Modules.Catalog.Domain/Bintainer.Modules.Catalog.Domain.csproj" />
