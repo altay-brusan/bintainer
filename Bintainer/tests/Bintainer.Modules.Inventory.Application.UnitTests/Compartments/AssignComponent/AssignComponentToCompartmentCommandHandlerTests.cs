@@ -1,7 +1,8 @@
+using Bintainer.Modules.Catalog.Application.Abstractions;
+using Bintainer.Modules.Catalog.Domain.Components;
 using Bintainer.Modules.Inventory.Application.Abstractions.Data;
 using Bintainer.Modules.Inventory.Application.Compartments.AssignComponent;
 using Bintainer.Modules.Inventory.Domain.Compartments;
-using Bintainer.Modules.Inventory.Domain.Components;
 using Bintainer.Modules.Inventory.Domain.StorageUnits;
 
 namespace Bintainer.Modules.Inventory.Application.UnitTests.Compartments.AssignComponent;
@@ -9,14 +10,14 @@ namespace Bintainer.Modules.Inventory.Application.UnitTests.Compartments.AssignC
 public class AssignComponentToCompartmentCommandHandlerTests
 {
     private readonly ICompartmentRepository _compartmentRepository = Substitute.For<ICompartmentRepository>();
-    private readonly IComponentRepository _componentRepository = Substitute.For<IComponentRepository>();
+    private readonly ICatalogApi _catalogApi = Substitute.For<ICatalogApi>();
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
     private readonly AssignComponentToCompartmentCommandHandler _handler;
 
     public AssignComponentToCompartmentCommandHandlerTests()
     {
         _handler = new AssignComponentToCompartmentCommandHandler(
-            _compartmentRepository, _componentRepository, _unitOfWork);
+            _compartmentRepository, _catalogApi, _unitOfWork);
     }
 
     private static Compartment CreateCompartment()
@@ -31,10 +32,9 @@ public class AssignComponentToCompartmentCommandHandlerTests
         var compartmentId = Guid.NewGuid();
         var componentId = Guid.NewGuid();
         var compartment = CreateCompartment();
-        var component = Component.Create("PN", "MPN", "Desc", null, null, null, null, null, null, null, null, null, null, null, 0);
 
         _compartmentRepository.GetByIdAsync(compartmentId, Arg.Any<CancellationToken>()).Returns(compartment);
-        _componentRepository.GetByIdAsync(componentId, Arg.Any<CancellationToken>()).Returns(component);
+        _catalogApi.ComponentExistsAsync(componentId, Arg.Any<CancellationToken>()).Returns(true);
 
         var command = new AssignComponentToCompartmentCommand(compartmentId, componentId, 5);
         var result = await _handler.Handle(command, CancellationToken.None);
@@ -65,7 +65,7 @@ public class AssignComponentToCompartmentCommandHandlerTests
         var componentId = Guid.NewGuid();
         var compartment = CreateCompartment();
         _compartmentRepository.GetByIdAsync(compartmentId, Arg.Any<CancellationToken>()).Returns(compartment);
-        _componentRepository.GetByIdAsync(componentId, Arg.Any<CancellationToken>()).Returns((Component?)null);
+        _catalogApi.ComponentExistsAsync(componentId, Arg.Any<CancellationToken>()).Returns(false);
 
         var command = new AssignComponentToCompartmentCommand(compartmentId, componentId, 5);
         var result = await _handler.Handle(command, CancellationToken.None);
