@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Trash/bintainer/**)",
+      "Read(//c/Trash/**)",
+      "Read(//c//**)",
+      "Bash(rm:*)",
+      "Bash(ls:*)",
+      "Bash(npx shadcn@latest:*)",
+      "Bash(npm install:*)"
+    ]
+  }
+}
