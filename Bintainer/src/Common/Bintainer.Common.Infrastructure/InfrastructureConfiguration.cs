@@ -28,7 +28,7 @@ public static class InfrastructureConfiguration
         services.AddSingleton(npgsqlDataSource);
 
         services.AddScoped<IDbConnectionFactory, DbConnectionFactory>();
-        services.AddSingleton<PublishDomainEventsInterceptor>();
+        services.AddScoped<PublishDomainEventsInterceptor>();
         services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
 
         services.AddDistributedMemoryCache();

@@ -1,7 +1,7 @@
 "use client";
 
 import { use, useState, useMemo, useCallback, lazy, Suspense } from "react";
-import { ArrowLeft, Settings2, Grid3x3, Box, X, Plus, Minus, Loader2 } from "lucide-react";
+import { ArrowLeft, Settings2, Grid3x3, Box, X, Plus, Minus, Loader2, ArrowRightLeft, PackageMinus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,6 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useStorageUnit } from "@/hooks/use-storage-units";
 import Link from "next/link";
+import { MoveComponentDialog } from "@/components/move-component-dialog";
+import { useAdjustQuantity } from "@/hooks/use-component-actions";
+import { toast } from "sonner";
 
 const StorageUnit3DViewer = lazy(() =>
   import("@/components/storage-unit-3d-viewer").then((m) => ({
@@ -40,6 +43,12 @@ export default function StorageUnitEditorPage({ params }: PageProps) {
   // Map of "row-col" → compartment count (default 1 for every bin, max 5)
   const [binCompartments, setBinCompartments] = useState<Map<string, number>>(new Map());
   const [selectedCompartment, setSelectedCompartment] = useState<number | null>(null);
+  const [moveTarget, setMoveTarget] = useState<{
+    componentId: string;
+    partNumber: string;
+    compartmentId: string;
+  } | null>(null);
+  const adjustQuantity = useAdjustQuantity();
 
   const componentsInUnit = useMemo(() => {
     if (!storageUnit?.bins) return [];
@@ -408,9 +417,58 @@ export default function StorageUnitEditorPage({ params }: PageProps) {
                             </Badge>
                           </div>
                           {comp?.componentId ? (
-                            <p className="mt-1 text-sm text-muted-foreground">
-                              Qty: {comp.quantity}
-                            </p>
+                            <div className="mt-1 flex items-center justify-between">
+                              <p className="text-sm text-muted-foreground">
+                                Qty: {comp.quantity}
+                              </p>
+                              {isActive && (
+                                <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-6 text-xs gap-1 px-2"
+                                    onClick={() =>
+                                      setMoveTarget({
+                                        componentId: comp.componentId!,
+                                        partNumber: comp.componentPartNumber ?? "",
+                                        compartmentId: comp.id,
+                                      })
+                                    }
+                                  >
+                                    <ArrowRightLeft className="h-3 w-3" />
+                                    Move
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-6 text-xs gap-1 px-2"
+                                    disabled={comp.quantity === 0 || adjustQuantity.isPending}
+                                    onClick={() => {
+                                      adjustQuantity.mutate(
+                                        {
+                                          id: comp.componentId!,
+                                          compartmentId: comp.id,
+                                          action: "Used",
+                                          quantity: 1,
+                                          notes: `Taken out from ${storageUnit.name}`,
+                                        },
+                                        {
+                                          onSuccess: () =>
+                                            toast.success(
+                                              `Took out 1× ${comp.componentPartNumber ?? "component"}`
+                                            ),
+                                          onError: () =>
+                                            toast.error("Failed to take out component"),
+                                        }
+                                      );
+                                    }}
+                                  >
+                                    <PackageMinus className="h-3 w-3" />
+                                    Take 1
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
                           ) : (
                             <p className="mt-1 text-sm text-muted-foreground italic">
                               No component assigned
@@ -435,6 +493,19 @@ export default function StorageUnitEditorPage({ params }: PageProps) {
           </div>
         </div>
       </div>
+
+      <MoveComponentDialog
+        component={
+          moveTarget
+            ? { id: moveTarget.componentId, partNumber: moveTarget.partNumber }
+            : null
+        }
+        open={!!moveTarget}
+        onOpenChange={(open) => {
+          if (!open) setMoveTarget(null);
+        }}
+        preselectedSourceCompartmentId={moveTarget?.compartmentId}
+      />
     </div>
   );
 }
