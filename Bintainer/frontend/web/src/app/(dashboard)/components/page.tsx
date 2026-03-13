@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Search, Plus, Pencil, Trash2, ArrowRightLeft, Filter, Tag, X, ChevronLeft, ChevronRight, FileSpreadsheet, Globe, ChevronDown } from "lucide-react";
+import { Search, Pencil, Trash2, ArrowRightLeft, Filter, Tag, X, ChevronLeft, ChevronRight, FileSpreadsheet, Globe, ChevronDown, PackageMinus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,13 +13,22 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { demoComponents, categories, type Component } from "@/lib/demo-data";
+import { useSearchComponents, useDeleteComponent } from "@/hooks/use-components";
+import { useCategories } from "@/hooks/use-categories";
+import { useTags } from "@/hooks/use-tags";
+import type { SearchComponentItemResponse, CategoryResponse } from "@/types/api";
 import { useCurrency } from "@/lib/currency";
 import { AddComponentDialog } from "@/components/add-component-dialog";
 import { EditComponentDialog } from "@/components/edit-component-dialog";
 import { MoveComponentDialog } from "@/components/move-component-dialog";
 import { ImportBomDialog } from "@/components/import-bom-dialog";
 import { ImportSupplierDialog } from "@/components/import-supplier-dialog";
+import { TakeoutComponentDialog } from "@/components/takeout-component-dialog";
+import { BomTakeoutDialog } from "@/components/bom-takeout-dialog";
+
+function flattenCategories(cats: CategoryResponse[]): CategoryResponse[] {
+  return cats.flatMap((c) => [c, ...flattenCategories(c.children)]);
+}
 
 const tagColors = [
   "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
@@ -47,14 +56,12 @@ function getTagColor(tag: string): string {
 }
 
 const columns: ColumnDef[] = [
-  { key: "component", label: "Component", defaultWidth: 160, minWidth: 120 },
   { key: "partNumber", label: "Part Number", defaultWidth: 160, minWidth: 100 },
-  { key: "unitPrice", label: "Unit Price", defaultWidth: 90, minWidth: 70 },
+  { key: "description", label: "Description", defaultWidth: 200, minWidth: 120 },
   { key: "category", label: "Category", defaultWidth: 130, minWidth: 100 },
   { key: "tags", label: "Tags", defaultWidth: 160, minWidth: 100 },
-  { key: "storageUnit", label: "Storage Unit", defaultWidth: 130, minWidth: 100 },
-  { key: "bin", label: "Bin", defaultWidth: 100, minWidth: 70 },
-  { key: "compartment", label: "Compartment", defaultWidth: 110, minWidth: 70 },
+  { key: "manufacturer", label: "Manufacturer", defaultWidth: 130, minWidth: 100 },
+  { key: "unitPrice", label: "Unit Price", defaultWidth: 90, minWidth: 70 },
   { key: "quantity", label: "Quantity", defaultWidth: 100, minWidth: 80 },
   { key: "actions", label: "", defaultWidth: 60, minWidth: 50, resizable: false },
 ];
@@ -63,46 +70,38 @@ export default function ComponentsPage() {
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
   const [tagFilter, setTagFilter] = useState<string | null>(null);
-  const [lowStockOnly, setLowStockOnly] = useState(false);
-  const [editComponent, setEditComponent] = useState<Component | null>(null);
-  const [moveComponent, setMoveComponent] = useState<Component | null>(null);
+  const [editComponent, setEditComponent] = useState<SearchComponentItemResponse | null>(null);
+  const [moveComponent, setMoveComponent] = useState<SearchComponentItemResponse | null>(null);
   const [importBomOpen, setImportBomOpen] = useState(false);
   const [importSupplierOpen, setImportSupplierOpen] = useState(false);
+  const [takeoutComponent, setTakeoutComponent] = useState<SearchComponentItemResponse | null>(null);
+  const [bomTakeoutOpen, setBomTakeoutOpen] = useState(false);
   const { format: formatPrice } = useCurrency();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  const allTags = useMemo(() => {
-    const set = new Set<string>();
-    for (const c of demoComponents) {
-      for (const t of c.tags ?? []) set.add(t);
-    }
-    return Array.from(set).sort();
-  }, []);
+  const { data: categoriesData } = useCategories();
+  const { data: tagsData } = useTags();
+  const deleteComponent = useDeleteComponent();
 
-  const filtered = useMemo(() => {
-    return demoComponents.filter((c) => {
-      const q = search.toLowerCase();
-      const matchesSearch =
-        !search ||
-        c.name.toLowerCase().includes(q) ||
-        (c.partNumber ?? "").toLowerCase().includes(q) ||
-        c.category.toLowerCase().includes(q) ||
-        (c.tags ?? []).some((t) => t.toLowerCase().includes(q));
-      const matchesCategory = !categoryFilter || c.category === categoryFilter;
-      const matchesTag = !tagFilter || (c.tags ?? []).includes(tagFilter);
-      const matchesLowStock = !lowStockOnly || c.quantity <= c.lowStockThreshold;
-      return matchesSearch && matchesCategory && matchesTag && matchesLowStock;
-    });
-  }, [search, categoryFilter, tagFilter, lowStockOnly]);
+  const allCategories = useMemo(
+    () => flattenCategories(categoriesData ?? []),
+    [categoriesData]
+  );
+  const allTags = tagsData ?? [];
 
-  // Reset to page 1 when filters change
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const { data: searchData, isLoading } = useSearchComponents({
+    q: search || undefined,
+    categoryId: categoryFilter ?? undefined,
+    tag: tagFilter ?? undefined,
+    page,
+    pageSize,
+  });
+
+  const items = searchData?.items ?? [];
+  const totalCount = searchData?.totalCount ?? 0;
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
   const currentPage = Math.min(page, totalPages);
-  const paginatedData = useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
-    return filtered.slice(start, start + pageSize);
-  }, [filtered, currentPage, pageSize]);
 
   // Reset page when filters change
   const resetPage = () => setPage(1);
@@ -113,7 +112,7 @@ export default function ComponentsPage() {
         <div>
           <h1 className="text-2xl font-bold">Components</h1>
           <p className="text-muted-foreground">
-            Manage all your components ({demoComponents.length} total)
+            Manage all your components ({totalCount} total)
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -133,6 +132,10 @@ export default function ComponentsPage() {
               <DropdownMenuItem onClick={() => setImportSupplierOpen(true)}>
                 <Globe className="mr-2 h-4 w-4" />
                 Import from Supplier
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setBomTakeoutOpen(true)}>
+                <PackageMinus className="mr-2 h-4 w-4" />
+                Take Out by BOM
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -154,16 +157,16 @@ export default function ComponentsPage() {
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="gap-2 bg-card">
               <Filter className="h-4 w-4" />
-              {categoryFilter ?? "All Categories"}
+              {categoryFilter ? allCategories.find((c) => c.id === categoryFilter)?.name ?? "Category" : "All Categories"}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            <DropdownMenuItem onClick={() => setCategoryFilter(null)}>
+            <DropdownMenuItem onClick={() => { setCategoryFilter(null); resetPage(); }}>
               All Categories
             </DropdownMenuItem>
-            {categories.map((cat) => (
-              <DropdownMenuItem key={cat} onClick={() => setCategoryFilter(cat)}>
-                {cat}
+            {allCategories.map((cat) => (
+              <DropdownMenuItem key={cat.id} onClick={() => { setCategoryFilter(cat.id); resetPage(); }}>
+                {cat.name}
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>
@@ -182,23 +185,19 @@ export default function ComponentsPage() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            <DropdownMenuItem onClick={() => setTagFilter(null)}>
+            <DropdownMenuItem onClick={() => { setTagFilter(null); resetPage(); }}>
               All Tags
             </DropdownMenuItem>
             {allTags.map((tag) => (
-              <DropdownMenuItem key={tag} onClick={() => setTagFilter(tag)}>
+              <DropdownMenuItem key={tag} onClick={() => { setTagFilter(tag); resetPage(); }}>
                 {tag}
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
-        <Button
-          variant={lowStockOnly ? "default" : "outline"}
-          className={lowStockOnly ? "" : "bg-card"}
-          onClick={() => setLowStockOnly(!lowStockOnly)}
-        >
-          Low Stock
-        </Button>
+        {isLoading && (
+          <span className="text-sm text-muted-foreground">Loading...</span>
+        )}
       </div>
 
       {/* Components Table */}
@@ -206,29 +205,28 @@ export default function ComponentsPage() {
         <ResizableTable columns={columns}>
           {() => (
             <TableBody>
-              {paginatedData.length === 0 ? (
+              {items.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={10} className="h-24 text-center text-muted-foreground">
-                    No components found.
+                  <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
+                    {isLoading ? "Loading..." : "No components found."}
                   </TableCell>
                 </TableRow>
               ) : (
-                paginatedData.map((comp) => {
-                  const isLow = comp.quantity <= comp.lowStockThreshold;
+                items.map((comp) => {
+                  const compTags = comp.tags ? comp.tags.split(",").map((t) => t.trim()).filter(Boolean) : [];
                   return (
                     <TableRow key={comp.id}>
-                      <TableCell className="font-medium truncate text-[0.9rem]">{comp.name}</TableCell>
                       <TableCell className="font-mono truncate text-[0.85rem] text-muted-foreground">{comp.partNumber ?? "—"}</TableCell>
-                      <TableCell className="font-mono text-[0.85rem]">{comp.unitPrice != null ? formatPrice(comp.unitPrice) : "—"}</TableCell>
+                      <TableCell className="font-medium truncate text-[0.9rem]">{comp.description || "—"}</TableCell>
                       <TableCell className="truncate">
-                        <Badge variant="secondary">{comp.category}</Badge>
+                        {comp.categoryName ? <Badge variant="secondary">{comp.categoryName}</Badge> : "—"}
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-1">
-                          {(comp.tags ?? []).map((tag) => (
+                          {compTags.map((tag) => (
                             <button
                               key={tag}
-                              onClick={() => setTagFilter(tag)}
+                              onClick={() => { setTagFilter(tag); resetPage(); }}
                               className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium cursor-pointer transition-opacity hover:opacity-80 ${getTagColor(tag)}`}
                             >
                               <Tag className="h-3 w-3" />
@@ -237,18 +235,12 @@ export default function ComponentsPage() {
                           ))}
                         </div>
                       </TableCell>
-                      <TableCell className="truncate text-[0.9rem]">{comp.storageUnit}</TableCell>
-                      <TableCell className="font-mono text-[0.9rem]">{comp.bin}</TableCell>
-                      <TableCell className="font-mono text-[0.9rem]">{comp.compartment}</TableCell>
+                      <TableCell className="truncate text-[0.9rem]">{comp.manufacturer ?? "—"}</TableCell>
+                      <TableCell className="font-mono text-[0.85rem]">{comp.unitPrice != null ? formatPrice(comp.unitPrice) : "—"}</TableCell>
                       <TableCell>
-                        <span className={`text-[0.9rem] ${isLow ? "font-semibold text-destructive" : ""}`}>
-                          {comp.quantity}
+                        <span className="text-[0.9rem]">
+                          {comp.totalQuantity}
                         </span>
-                        {isLow && (
-                          <Badge variant="destructive" className="ml-2 text-xs">
-                            Low
-                          </Badge>
-                        )}
                       </TableCell>
                       <TableCell>
                         <DropdownMenu>
@@ -264,7 +256,13 @@ export default function ComponentsPage() {
                             <DropdownMenuItem onClick={() => setMoveComponent(comp)}>
                               <ArrowRightLeft className="mr-2 h-3.5 w-3.5" /> Move
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive">
+                            <DropdownMenuItem onClick={() => setTakeoutComponent(comp)}>
+                              <PackageMinus className="mr-2 h-3.5 w-3.5" /> Take Out
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className="text-destructive"
+                              onClick={() => deleteComponent.mutate(comp.id)}
+                            >
                               <Trash2 className="mr-2 h-3.5 w-3.5" /> Delete
                             </DropdownMenuItem>
                           </DropdownMenuContent>
@@ -283,7 +281,7 @@ export default function ComponentsPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <span>
-            Showing {filtered.length === 0 ? 0 : (currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, filtered.length)} of {filtered.length}
+            Showing {totalCount === 0 ? 0 : (currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, totalCount)} of {totalCount}
           </span>
           <select
             value={pageSize}
@@ -352,6 +350,15 @@ export default function ComponentsPage() {
       <ImportSupplierDialog
         open={importSupplierOpen}
         onOpenChange={setImportSupplierOpen}
+      />
+      <TakeoutComponentDialog
+        component={takeoutComponent}
+        open={!!takeoutComponent}
+        onOpenChange={(open) => { if (!open) setTakeoutComponent(null); }}
+      />
+      <BomTakeoutDialog
+        open={bomTakeoutOpen}
+        onOpenChange={setBomTakeoutOpen}
       />
     </div>
   );
