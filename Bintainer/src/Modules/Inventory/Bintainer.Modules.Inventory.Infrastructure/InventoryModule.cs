@@ -18,6 +18,7 @@ using Bintainer.Modules.Inventory.Infrastructure.Movements;
 using Bintainer.Modules.Inventory.Infrastructure.StorageUnits;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -33,7 +34,9 @@ public static class InventoryModule
 
         services.AddDbContext<InventoryDbContext>((sp, options) =>
         {
-            options.UseNpgsql(configuration.GetConnectionString("DefaultConnection"))
+            options.UseNpgsql(configuration.GetConnectionString("DefaultConnection"),
+                    npgsqlOptions => npgsqlOptions.MigrationsHistoryTable(
+                        HistoryRepository.DefaultTableName, Schemas.Inventory))
                 .UseSnakeCaseNamingConvention()
                 .AddInterceptors(sp.GetRequiredService<PublishDomainEventsInterceptor>());
         });

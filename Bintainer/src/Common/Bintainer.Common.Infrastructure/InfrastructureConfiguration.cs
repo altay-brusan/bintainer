@@ -22,7 +22,9 @@ public static class InfrastructureConfiguration
         string connectionString,
         params Action<IRegistrationConfigurator>[] moduleConfigureConsumers)
     {
-        var npgsqlDataSource = new NpgsqlDataSourceBuilder(connectionString).Build();
+        var npgsqlDataSource = new NpgsqlDataSourceBuilder(connectionString)
+            .EnableDynamicJson()
+            .Build();
         services.AddSingleton(npgsqlDataSource);
 
         services.AddScoped<IDbConnectionFactory, DbConnectionFactory>();

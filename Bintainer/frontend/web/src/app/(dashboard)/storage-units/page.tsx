@@ -1,8 +1,9 @@
 "use client";
 
-import { Plus, Archive, Grid3x3, Layers } from "lucide-react";
+import { Plus, Archive, Grid3x3, Layers, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { demoStorageUnits } from "@/lib/demo-data";
+import { useInventories } from "@/hooks/use-inventories";
+import { useAllStorageUnits } from "@/hooks/use-storage-units";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
@@ -15,13 +16,20 @@ const colorSchemes = [
 ];
 
 export default function StorageUnitsPage() {
+  const { data: inventories } = useInventories();
+  const { data: storageUnits, isLoading } = useAllStorageUnits(
+    inventories?.map((i) => i.id) ?? []
+  );
+
+  const units = storageUnits ?? [];
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Storage Units</h1>
           <p className="text-muted-foreground">
-            Manage your storage cabinets ({demoStorageUnits.length} units)
+            Manage your storage cabinets ({units.length} units)
           </p>
         </div>
         <Button className="gap-2">
@@ -30,8 +38,13 @@ export default function StorageUnitsPage() {
         </Button>
       </div>
 
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
+      ) : (
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {demoStorageUnits.map((su, i) => {
+        {units.map((su, i) => {
           const colors = colorSchemes[i % colorSchemes.length];
           const totalBins = su.rows * su.columns;
           return (
@@ -67,6 +80,7 @@ export default function StorageUnitsPage() {
           );
         })}
       </div>
+      )}
     </div>
   );
 }

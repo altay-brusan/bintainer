@@ -21,16 +21,16 @@ internal sealed class ReportReadService(IDbConnectionFactory dbConnectionFactory
         const string sql =
             """
             SELECT
-                (SELECT COUNT(*) FROM inventory.components) AS TotalComponents,
-                (SELECT COUNT(*) FROM inventory.categories) AS TotalCategories,
-                (SELECT COUNT(*) FROM inventory.storage_units) AS TotalStorageUnits,
-                (SELECT COUNT(*) FROM inventory.compartments WHERE component_id IS NOT NULL) AS OccupiedCompartments,
-                (SELECT COALESCE(SUM(quantity), 0) FROM inventory.compartments WHERE component_id IS NOT NULL) AS TotalQuantity,
+                (SELECT COUNT(*)::int FROM catalog.components) AS TotalComponents,
+                (SELECT COUNT(*)::int FROM catalog.categories) AS TotalCategories,
+                (SELECT COUNT(*)::int FROM inventory.storage_units) AS TotalStorageUnits,
+                (SELECT COUNT(*)::int FROM inventory.compartments WHERE component_id IS NOT NULL) AS OccupiedCompartments,
+                (SELECT COALESCE(SUM(quantity), 0)::int FROM inventory.compartments WHERE component_id IS NOT NULL) AS TotalQuantity,
                 (SELECT COALESCE(SUM(c.quantity * COALESCE(p.unit_price, 0)), 0)
                  FROM inventory.compartments c
-                 JOIN inventory.components p ON p.id = c.component_id
+                 JOIN catalog.components p ON p.id = c.component_id
                  WHERE c.component_id IS NOT NULL) AS TotalValue,
-                (SELECT COUNT(*) FROM inventory.movements WHERE date >= NOW() - INTERVAL '30 days') AS RecentMovements
+                (SELECT COUNT(*)::int FROM inventory.movements WHERE date >= NOW() - INTERVAL '30 days') AS RecentMovements
             """;
 
         return await connection.QuerySingleAsync<SummaryResponse>(sql);
@@ -48,9 +48,9 @@ internal sealed class ReportReadService(IDbConnectionFactory dbConnectionFactory
                 p.id AS Id,
                 p.part_number AS PartNumber,
                 p.description AS Description,
-                COALESCE(SUM(c.quantity), 0) AS TotalQuantity,
+                COALESCE(SUM(c.quantity), 0)::int AS TotalQuantity,
                 COALESCE(SUM(c.quantity * COALESCE(p.unit_price, 0)), 0) AS TotalValue
-            FROM inventory.components p
+            FROM catalog.components p
             LEFT JOIN inventory.compartments c ON c.component_id = p.id
             GROUP BY p.id, p.part_number, p.description
             ORDER BY {orderBy} DESC
@@ -71,9 +71,9 @@ internal sealed class ReportReadService(IDbConnectionFactory dbConnectionFactory
                 p.id AS Id,
                 p.part_number AS PartNumber,
                 p.description AS Description,
-                COALESCE(SUM(c.quantity), 0) AS TotalQuantity,
+                COALESCE(SUM(c.quantity), 0)::int AS TotalQuantity,
                 p.low_stock_threshold AS LowStockThreshold
-            FROM inventory.components p
+            FROM catalog.components p
             LEFT JOIN inventory.compartments c ON c.component_id = p.id
             WHERE p.low_stock_threshold > 0
             GROUP BY p.id, p.part_number, p.description, p.low_stock_threshold
@@ -94,8 +94,8 @@ internal sealed class ReportReadService(IDbConnectionFactory dbConnectionFactory
             SELECT
                 su.id AS StorageUnitId,
                 su.name AS StorageUnitName,
-                COUNT(c.id) AS TotalCompartments,
-                COUNT(c.component_id) AS OccupiedCompartments
+                COUNT(c.id)::int AS TotalCompartments,
+                COUNT(c.component_id)::int AS OccupiedCompartments
             FROM inventory.storage_units su
             JOIN inventory.bins b ON b.storage_unit_id = su.id
             JOIN inventory.compartments c ON c.bin_id = b.id
@@ -115,7 +115,7 @@ internal sealed class ReportReadService(IDbConnectionFactory dbConnectionFactory
 
         const string sql =
             """
-            SELECT d.date AS Date, COALESCE(COUNT(m.id), 0) AS Count
+            SELECT d.date AS Date, COALESCE(COUNT(m.id), 0)::int AS Count
             FROM generate_series(
                 CURRENT_DATE - @Days * INTERVAL '1 day',
                 CURRENT_DATE,
@@ -138,8 +138,8 @@ internal sealed class ReportReadService(IDbConnectionFactory dbConnectionFactory
             """
             SELECT
                 COALESCE(provider, 'Unknown') AS SupplierName,
-                COUNT(*) AS ComponentCount
-            FROM inventory.components
+                COUNT(*)::int AS ComponentCount
+            FROM catalog.components
             WHERE provider IS NOT NULL AND provider != ''
             GROUP BY provider
             ORDER BY ComponentCount DESC
@@ -157,10 +157,10 @@ internal sealed class ReportReadService(IDbConnectionFactory dbConnectionFactory
             """
             SELECT
                 COALESCE(c.name, 'Uncategorized') AS CategoryName,
-                COUNT(p.id) AS ComponentCount,
+                COUNT(p.id)::int AS ComponentCount,
                 COALESCE(SUM(COALESCE(p.unit_price, 0)), 0) AS TotalValue
-            FROM inventory.components p
-            LEFT JOIN inventory.categories c ON c.id = p.category_id
+            FROM catalog.components p
+            LEFT JOIN catalog.categories c ON c.id = p.category_id
             GROUP BY c.name
             ORDER BY ComponentCount DESC
             """;

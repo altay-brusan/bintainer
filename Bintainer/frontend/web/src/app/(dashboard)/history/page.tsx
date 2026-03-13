@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { Search, Filter, Plus, Minus, RefreshCw, ArrowRightLeft } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import { demoMovements } from "@/lib/demo-data";
+import { useMovements } from "@/hooks/use-movements";
 
 const actionConfig = {
   added: { icon: Plus, label: "Added", className: "bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-400" },
@@ -45,21 +45,22 @@ export default function MovementHistoryPage() {
   const [search, setSearch] = useState("");
   const [actionFilter, setActionFilter] = useState<string | null>(null);
 
-  const filtered = useMemo(() => {
-    return demoMovements.filter((m) => {
-      const matchesSearch =
-        !search || m.component.toLowerCase().includes(search.toLowerCase());
-      const matchesAction = !actionFilter || m.action === actionFilter;
-      return matchesSearch && matchesAction;
-    });
-  }, [search, actionFilter]);
+  const { data, isLoading } = useMovements({
+    action: actionFilter || undefined,
+    q: search || undefined,
+    page: 1,
+    pageSize: 50,
+  });
+
+  const movements = data?.items ?? [];
+  const totalCount = data?.totalCount ?? 0;
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Movement History</h1>
         <p className="text-muted-foreground">
-          Track all component movements ({demoMovements.length} records)
+          Track all component movements ({totalCount} records)
         </p>
       </div>
 
@@ -108,22 +109,23 @@ export default function MovementHistoryPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.length === 0 ? (
+            {movements.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
-                  No movements found.
+                  {isLoading ? "Loading..." : "No movements found."}
                 </TableCell>
               </TableRow>
             ) : (
-              filtered.map((movement) => {
-                const config = actionConfig[movement.action];
+              movements.map((movement) => {
+                const actionKey = movement.action.toLowerCase() as keyof typeof actionConfig;
+                const config = actionConfig[actionKey] ?? actionConfig.moved;
                 return (
                   <TableRow key={movement.id}>
                     <TableCell className="text-muted-foreground">
                       {formatDate(movement.date)}
                     </TableCell>
                     <TableCell className="font-medium">
-                      {movement.component}
+                      {movement.componentPartNumber ?? "Unknown"}
                     </TableCell>
                     <TableCell>
                       <Badge variant="secondary" className={cn("gap-1", config.className)}>
@@ -146,10 +148,10 @@ export default function MovementHistoryPage() {
                       </span>
                     </TableCell>
                     <TableCell className="font-mono text-sm">
-                      {movement.location}
+                      {movement.compartmentLabel ?? movement.storageUnitName ?? "\u2014"}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {movement.user}
+                      {movement.userName ?? "\u2014"}
                     </TableCell>
                   </TableRow>
                 );

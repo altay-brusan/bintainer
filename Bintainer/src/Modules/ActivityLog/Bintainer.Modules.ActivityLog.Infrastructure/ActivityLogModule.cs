@@ -5,6 +5,7 @@ using Bintainer.Modules.ActivityLog.Infrastructure.Consumers;
 using Bintainer.Modules.ActivityLog.Infrastructure.Database;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -20,7 +21,9 @@ public static class ActivityLogModule
 
         services.AddDbContext<ActivityLogDbContext>(options =>
         {
-            options.UseNpgsql(configuration.GetConnectionString("DefaultConnection"))
+            options.UseNpgsql(configuration.GetConnectionString("DefaultConnection"),
+                    npgsqlOptions => npgsqlOptions.MigrationsHistoryTable(
+                        HistoryRepository.DefaultTableName, Schemas.Activity))
                 .UseSnakeCaseNamingConvention();
         });
 

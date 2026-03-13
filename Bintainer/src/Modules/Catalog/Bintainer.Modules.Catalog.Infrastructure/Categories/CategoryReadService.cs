@@ -15,7 +15,7 @@ internal sealed class CategoryReadService(IDbConnectionFactory dbConnectionFacto
         const string sql =
             """
             SELECT id AS Id, name AS Name, parent_id AS ParentId
-            FROM inventory.categories
+            FROM catalog.categories
             ORDER BY name
             """;
 

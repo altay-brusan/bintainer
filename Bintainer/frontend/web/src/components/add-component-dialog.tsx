@@ -34,102 +34,29 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ComboboxInput } from "@/components/ui/combobox-input";
 import type { PartAttribute } from "@/types/api";
+import { useFootprints } from "@/hooks/use-footprints";
+import { useCategories } from "@/hooks/use-categories";
+import { useCreateComponent } from "@/hooks/use-components";
 import { toast } from "sonner";
-
-// TODO: fetch from API when backend is ready
-const existingFootprints = [
-  "0201", "0402", "0603", "0805", "1206", "1210", "2512",
-  "SOT-23", "SOT-223", "SOT-89",
-  "TO-92", "TO-220", "TO-252",
-  "SOP-8", "SOIC-8", "SOIC-16",
-  "TSSOP-8", "TSSOP-16", "TSSOP-20",
-  "QFP-32", "QFP-44", "QFP-48", "QFP-64",
-  "LQFP-32", "LQFP-48", "LQFP-64", "LQFP-100",
-  "QFN-16", "QFN-24", "QFN-32", "QFN-48", "QFN-56",
-  "BGA-256", "BGA-484",
-  "DIP-8", "DIP-14", "DIP-16", "DIP-28",
-  "SMA", "SMB", "SMC",
-];
 
 interface AddComponentDialogProps {
   trigger?: React.ReactNode;
 }
 
-const categoryTree = [
-  {
-    label: "Resistors",
-    children: [
-      { label: "Chip Resistor (SMD)" },
-      { label: "Through Hole" },
-      { label: "Potentiometers" },
-      { label: "Thermistors" },
-    ],
-  },
-  {
-    label: "Capacitors",
-    children: [
-      { label: "Ceramic (SMD)" },
-      { label: "Electrolytic" },
-      { label: "Film" },
-      { label: "Tantalum" },
-    ],
-  },
-  {
-    label: "Inductors",
-    children: [
-      { label: "Fixed" },
-      { label: "Adjustable" },
-      { label: "Chokes" },
-    ],
-  },
-  {
-    label: "Transistors",
-    children: [
-      { label: "BJT (NPN)" },
-      { label: "BJT (PNP)" },
-      { label: "MOSFET" },
-      { label: "IGBT" },
-    ],
-  },
-  {
-    label: "Microcontrollers",
-    children: [
-      { label: "ARM" },
-      { label: "AVR" },
-      { label: "PIC" },
-      { label: "RISC-V" },
-    ],
-  },
-  {
-    label: "LEDs",
-    children: [
-      { label: "Standard" },
-      { label: "SMD" },
-      { label: "High Power" },
-    ],
-  },
-  {
-    label: "Connectors",
-    children: [
-      { label: "Headers" },
-      { label: "USB" },
-      { label: "Terminal Blocks" },
-    ],
-  },
-  {
-    label: "ICs",
-    children: [
-      { label: "Op-Amps" },
-      { label: "Voltage Regulators" },
-      { label: "Logic Gates" },
-      { label: "Timers" },
-    ],
-  },
-];
-
 export function AddComponentDialog({ trigger }: AddComponentDialogProps) {
   const [open, setOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { data: footprintsData } = useFootprints();
+  const { data: categoriesData } = useCategories();
+  const createComponent = useCreateComponent();
+
+  const existingFootprints = (footprintsData ?? []).map((f) => f.name);
+
+  const categoryTree = (categoriesData ?? []).map((cat) => ({
+    label: cat.name,
+    children: (cat.children ?? []).map((child) => ({ label: child.name })),
+  }));
 
   // Mandatory fields
   const [partNumber, setPartNumber] = useState("");
@@ -227,6 +154,25 @@ export function AddComponentDialog({ trigger }: AddComponentDialogProps) {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  const buildRequest = () => {
+    const attrRecord: Record<string, string> = {};
+    attributes.forEach((a) => { attrRecord[a.title] = a.value; });
+
+    return {
+      partNumber: partNumber.trim(),
+      manufacturerPartNumber: mfrPartNumber.trim(),
+      description: description.trim(),
+      detailedDescription: detailedDescription.trim() || undefined,
+      manufacturer: manufacturer.trim() || undefined,
+      provider: supplier.trim() || undefined,
+      url: url.trim() || undefined,
+      tags: tags.length > 0 ? tags.join(",") : undefined,
+      unitPrice: unitPrice ? Number(unitPrice) : undefined,
+      lowStockThreshold,
+      attributes: attrRecord,
+    };
+  };
+
   const handleSubmitAndNext = () => {
     if (
       !partNumber.trim() ||
@@ -237,10 +183,15 @@ export function AddComponentDialog({ trigger }: AddComponentDialogProps) {
       return;
     }
 
-    // TODO: call API when backend is ready
-    console.log("Creating part and continuing...");
-    toast.success("Component created (demo) — ready for next");
-    resetForm();
+    createComponent.mutate(buildRequest(), {
+      onSuccess: () => {
+        toast.success("Component created — ready for next");
+        resetForm();
+      },
+      onError: () => {
+        toast.error("Failed to create component");
+      },
+    });
   };
 
   const handleSubmit = () => {
@@ -253,27 +204,16 @@ export function AddComponentDialog({ trigger }: AddComponentDialogProps) {
       return;
     }
 
-    // TODO: call API when backend is ready (upload image as FormData)
-    const part = {
-      partNumber: partNumber.trim(),
-      manufacturerPartNumber: mfrPartNumber.trim(),
-      description: description.trim(),
-      imageFile,
-      manufacturer: manufacturer.trim() || undefined,
-      detailedDescription: detailedDescription.trim() || undefined,
-      footprint: footprint.trim() || undefined,
-      category: category.trim() || undefined,
-      supplier: supplier.trim() || undefined,
-      url: url.trim() || undefined,
-      binLabel: binLabel.trim() || undefined,
-      quantity,
-      lowStockThreshold,
-      attributes,
-    };
-    console.log("Creating part:", part);
-    toast.success("Component created (demo)");
-    resetForm();
-    setOpen(false);
+    createComponent.mutate(buildRequest(), {
+      onSuccess: () => {
+        toast.success("Component created");
+        resetForm();
+        setOpen(false);
+      },
+      onError: () => {
+        toast.error("Failed to create component");
+      },
+    });
   };
 
   const isMandatoryValid =
@@ -726,12 +666,16 @@ export function AddComponentDialog({ trigger }: AddComponentDialogProps) {
               variant="secondary"
               size="lg"
               onClick={handleSubmitAndNext}
-              disabled={!isMandatoryValid}
+              disabled={!isMandatoryValid || createComponent.isPending}
             >
               <Plus className="mr-2 h-4 w-4" />
               Create & Add Next
             </Button>
-            <Button size="lg" onClick={handleSubmit} disabled={!isMandatoryValid}>
+            <Button
+              size="lg"
+              onClick={handleSubmit}
+              disabled={!isMandatoryValid || createComponent.isPending}
+            >
               Create Component
             </Button>
           </div>

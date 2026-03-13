@@ -38,7 +38,7 @@ internal sealed class MovementReadService(IDbConnectionFactory dbConnectionFacto
         var countSql = $"""
             SELECT COUNT(*)
             FROM inventory.movements m
-            LEFT JOIN inventory.components comp ON comp.id = m.component_id
+            LEFT JOIN catalog.components comp ON comp.id = m.component_id
             {whereClause}
             """;
         var totalCount = await connection.ExecuteScalarAsync<int>(countSql, parameters);
@@ -62,7 +62,7 @@ internal sealed class MovementReadService(IDbConnectionFactory dbConnectionFacto
                 u.first_name || ' ' || u.last_name AS UserName,
                 m.notes AS Notes
             FROM inventory.movements m
-            LEFT JOIN inventory.components comp ON comp.id = m.component_id
+            LEFT JOIN catalog.components comp ON comp.id = m.component_id
             LEFT JOIN inventory.compartments c ON c.id = m.compartment_id
             LEFT JOIN inventory.bins b ON b.id = c.bin_id
             LEFT JOIN inventory.storage_units su ON su.id = b.storage_unit_id

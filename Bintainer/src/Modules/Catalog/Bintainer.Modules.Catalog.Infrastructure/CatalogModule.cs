@@ -18,8 +18,10 @@ using Bintainer.Modules.Catalog.Infrastructure.Footprints;
 using Bintainer.Modules.Catalog.Infrastructure.Storage;
 using Bintainer.Modules.Catalog.IntegrationEvents;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Npgsql;
 
 namespace Bintainer.Modules.Catalog.Infrastructure;
 
@@ -33,7 +35,9 @@ public static class CatalogModule
 
         services.AddDbContext<CatalogDbContext>((sp, options) =>
         {
-            options.UseNpgsql(configuration.GetConnectionString("DefaultConnection"))
+            options.UseNpgsql(sp.GetRequiredService<NpgsqlDataSource>(),
+                    npgsqlOptions => npgsqlOptions.MigrationsHistoryTable(
+                        HistoryRepository.DefaultTableName, Schemas.Catalog))
                 .UseSnakeCaseNamingConvention()
                 .AddInterceptors(sp.GetRequiredService<PublishDomainEventsInterceptor>());
         });

@@ -11,15 +11,6 @@ import { useRouter } from "next/navigation";
 import api from "@/lib/api";
 import type { User } from "@/types/api";
 
-const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
-
-const DEMO_USER: User = {
-  id: "demo-user-id",
-  email: "demo@bintainer.com",
-  firstName: "Demo",
-  lastName: "User",
-};
-
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
@@ -42,10 +33,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   const fetchUser = useCallback(async () => {
-    if (DEMO_MODE) {
-      setUser(DEMO_USER);
-      return;
-    }
     try {
       const { data } = await api.get<User>("/api/auth/me");
       setUser(data);
@@ -57,11 +44,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (DEMO_MODE) {
-      setUser(DEMO_USER);
-      setIsLoading(false);
-      return;
-    }
     const token = localStorage.getItem("accessToken");
     if (token) {
       fetchUser().finally(() => setIsLoading(false));
@@ -71,11 +53,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [fetchUser]);
 
   const login = async (email: string, password: string) => {
-    if (DEMO_MODE) {
-      setUser(DEMO_USER);
-      router.push("/");
-      return;
-    }
     const { data } = await api.post("/api/auth/login", { email, password });
     localStorage.setItem("accessToken", data.accessToken);
     localStorage.setItem("refreshToken", data.refreshToken);
@@ -89,11 +66,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     firstName: string,
     lastName: string
   ) => {
-    if (DEMO_MODE) {
-      setUser(DEMO_USER);
-      router.push("/");
-      return;
-    }
     await api.post("/api/auth/register", {
       email,
       password,
@@ -104,12 +76,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = async () => {
-    if (!DEMO_MODE) {
-      try {
-        await api.post("/api/auth/logout");
-      } catch {
-        // ignore
-      }
+    try {
+      await api.post("/api/auth/logout");
+    } catch {
+      // ignore
     }
     setUser(null);
     localStorage.removeItem("accessToken");

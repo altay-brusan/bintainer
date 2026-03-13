@@ -15,7 +15,7 @@ internal sealed class FootprintReadService(IDbConnectionFactory dbConnectionFact
         const string sql =
             """
             SELECT id AS Id, name AS Name
-            FROM inventory.footprints
+            FROM catalog.footprints
             ORDER BY name
             """;
 

@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/lib/auth";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { categories } from "@/lib/demo-data";
+import { useCategories } from "@/hooks/use-categories";
+import type { CategoryResponse } from "@/types/api";
 import { Badge } from "@/components/ui/badge";
 import { useCurrency, CURRENCIES } from "@/lib/currency";
 import {
@@ -17,9 +18,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+function flattenCategories(cats: CategoryResponse[]): string[] {
+  return cats.flatMap((c) => [c.name, ...flattenCategories(c.children)]);
+}
+
 export default function SettingsPage() {
   const { user } = useAuth();
   const { currency, setCurrencyCode } = useCurrency();
+  const { data: categoriesData } = useCategories();
+  const categoryNames = flattenCategories(categoriesData ?? []);
 
   return (
     <div className="space-y-6">
@@ -109,7 +116,7 @@ export default function SettingsPage() {
             <Tag className="h-4 w-4" /> Component Categories
           </h3>
           <div className="flex flex-wrap gap-2">
-            {categories.map((cat) => (
+            {categoryNames.map((cat) => (
               <Badge key={cat} variant="secondary" className="text-sm">
                 {cat}
               </Badge>

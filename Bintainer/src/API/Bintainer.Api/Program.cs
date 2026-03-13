@@ -1,3 +1,4 @@
+using Bintainer.Api;
 using Bintainer.Api.Extensions;
 using Bintainer.Api.Middleware;
 using Bintainer.Common.Application;
@@ -94,6 +95,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
     app.ApplyMigrations();
+    await DatabaseSeeder.SeedAsync(app.Services);
 }
 
 app.UseExceptionHandler();
@@ -107,4 +109,4 @@ app.UseAuthorization();
 
 app.MapEndpoints();
 
-app.Run();
+await app.RunAsync();

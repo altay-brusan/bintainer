@@ -1,13 +1,13 @@
 "use client";
 
 import { use, useState, useMemo, useCallback, lazy, Suspense } from "react";
-import { ArrowLeft, Settings2, Grid3x3, Box, X, Plus, Minus } from "lucide-react";
+import { ArrowLeft, Settings2, Grid3x3, Box, X, Plus, Minus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { demoStorageUnits, demoComponents } from "@/lib/demo-data";
+import { useStorageUnit } from "@/hooks/use-storage-units";
 import Link from "next/link";
 
 const StorageUnit3DViewer = lazy(() =>
@@ -22,27 +22,52 @@ interface PageProps {
 
 export default function StorageUnitEditorPage({ params }: PageProps) {
   const { storageUnitId } = use(params);
-  const storageUnit = demoStorageUnits.find((su) => su.id === storageUnitId);
+  const { data: storageUnit, isLoading } = useStorageUnit(storageUnitId);
   const [selectedBin, setSelectedBin] = useState<{ row: number; col: number } | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "3d">("grid");
-  const [editRows, setEditRows] = useState(storageUnit?.rows ?? 1);
-  const [editColumns, setEditColumns] = useState(storageUnit?.columns ?? 1);
+  const [editRows, setEditRows] = useState(1);
+  const [editColumns, setEditColumns] = useState(1);
+
+  // Sync editRows/editColumns when storageUnit loads
+  const [initialized, setInitialized] = useState(false);
+  if (storageUnit && !initialized) {
+    setEditRows(storageUnit.rows);
+    setEditColumns(storageUnit.columns);
+    setInitialized(true);
+  }
   const [deletedBins, setDeletedBins] = useState<Set<string>>(new Set());
   const [removedBins, setRemovedBins] = useState<Set<string>>(new Set());
   // Map of "row-col" → compartment count (default 1 for every bin, max 5)
   const [binCompartments, setBinCompartments] = useState<Map<string, number>>(new Map());
   const [selectedCompartment, setSelectedCompartment] = useState<number | null>(null);
 
-  const componentsInUnit = useMemo(
-    () => demoComponents.filter((c) => c.storageUnit === storageUnit?.name),
-    [storageUnit]
-  );
+  const componentsInUnit = useMemo(() => {
+    if (!storageUnit?.bins) return [];
+    return storageUnit.bins.flatMap((bin) =>
+      bin.compartments
+        .filter((c) => c.componentId)
+        .map((c) => ({
+          componentId: c.componentId!,
+          partNumber: c.componentPartNumber ?? "",
+          quantity: c.quantity,
+          binRow: bin.row,
+          binCol: bin.column,
+          compartmentLabel: c.label,
+        }))
+    );
+  }, [storageUnit]);
+
+  const selectedBinData = useMemo(() => {
+    if (!selectedBin || !storageUnit?.bins) return null;
+    return storageUnit.bins.find(
+      (b) => b.row === selectedBin.row && b.column === selectedBin.col
+    ) ?? null;
+  }, [selectedBin, storageUnit]);
 
   const selectedBinComponents = useMemo(() => {
-    if (!selectedBin || !storageUnit) return [];
-    const binLabel = `R${String(selectedBin.row + 1).padStart(2, "0")}-C${String(selectedBin.col + 1).padStart(2, "0")}`;
-    return componentsInUnit.filter((c) => c.bin === binLabel);
-  }, [selectedBin, componentsInUnit, storageUnit]);
+    if (!selectedBinData) return [];
+    return selectedBinData.compartments;
+  }, [selectedBinData]);
 
   const selectBin = useCallback((bin: { row: number; col: number } | null) => {
     setSelectedBin(bin);
@@ -89,6 +114,14 @@ export default function StorageUnitEditorPage({ params }: PageProps) {
     setDeletedBins(new Set());
     selectBin(null);
   }, [deletedBins]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   if (!storageUnit) {
     return (
@@ -206,12 +239,12 @@ export default function StorageUnitEditorPage({ params }: PageProps) {
                   columns={editColumns}
                   bins={Array.from({ length: editRows }).flatMap((_, r) =>
                     Array.from({ length: editColumns }).map((_, c) => {
-                      const binLabel = `R${String(r + 1).padStart(2, "0")}-C${String(c + 1).padStart(2, "0")}`;
+                      const bin = storageUnit.bins?.find((b) => b.row === r && b.column === c);
                       return {
                         id: `${r}-${c}`,
                         row: r,
                         col: c,
-                        hasComponents: componentsInUnit.some((comp) => comp.bin === binLabel),
+                        hasComponents: bin?.compartments.some((comp) => !!comp.componentId) ?? false,
                       };
                     })
                   )}
@@ -260,8 +293,8 @@ export default function StorageUnitEditorPage({ params }: PageProps) {
                       />
                     );
                   }
-                  const binLabel = `R${String(r + 1).padStart(2, "0")}-C${String(c + 1).padStart(2, "0")}`;
-                  const hasComponents = componentsInUnit.some((comp) => comp.bin === binLabel);
+                  const bin = storageUnit.bins?.find((b) => b.row === r && b.column === c);
+                  const hasComponents = bin?.compartments.some((comp) => !!comp.componentId) ?? false;
                   const isSelected = selectedBin?.row === r && selectedBin?.col === c;
                   const isDeleted = deletedBins.has(key);
 
@@ -354,7 +387,7 @@ export default function StorageUnitEditorPage({ params }: PageProps) {
                   <div className="space-y-2">
                     {Array.from({ length: selectedBinCompartmentCount }).map((_, i) => {
                       const compartmentLabel = `C${i + 1}`;
-                      const comp = selectedBinComponents.find((c) => c.compartment === compartmentLabel);
+                      const comp = selectedBinComponents.find((c) => c.label === compartmentLabel);
                       const isActive = selectedCompartment === i;
                       return (
                         <button
@@ -369,12 +402,12 @@ export default function StorageUnitEditorPage({ params }: PageProps) {
                           )}
                         >
                           <div className="flex items-center justify-between">
-                            <p className="text-sm font-medium">{comp ? comp.name : "Empty"}</p>
+                            <p className="text-sm font-medium">{comp?.componentPartNumber ? comp.componentPartNumber : "Empty"}</p>
                             <Badge variant={isActive ? "default" : "secondary"} className="text-xs">
                               {compartmentLabel}
                             </Badge>
                           </div>
-                          {comp ? (
+                          {comp?.componentId ? (
                             <p className="mt-1 text-sm text-muted-foreground">
                               Qty: {comp.quantity}
                             </p>

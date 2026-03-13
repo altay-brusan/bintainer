@@ -12,11 +12,13 @@ dotnet run --project src/API/Bintainer.Api
 # Add EF Core migration (from repo root)
 dotnet ef migrations add <MigrationName> --project src/Modules/Users/Bintainer.Modules.Users.Infrastructure --startup-project src/API/Bintainer.Api
 dotnet ef migrations add <MigrationName> --project src/Modules/Inventory/Bintainer.Modules.Inventory.Infrastructure --startup-project src/API/Bintainer.Api
+dotnet ef migrations add <MigrationName> --project src/Modules/Catalog/Bintainer.Modules.Catalog.Infrastructure --startup-project src/API/Bintainer.Api
 dotnet ef migrations add <MigrationName> --project src/Modules/ActivityLog/Bintainer.Modules.ActivityLog.Infrastructure --startup-project src/API/Bintainer.Api
 
 # Apply migrations
 dotnet ef database update --project src/Modules/Users/Bintainer.Modules.Users.Infrastructure --startup-project src/API/Bintainer.Api
 dotnet ef database update --project src/Modules/Inventory/Bintainer.Modules.Inventory.Infrastructure --startup-project src/API/Bintainer.Api
+dotnet ef database update --project src/Modules/Catalog/Bintainer.Modules.Catalog.Infrastructure --startup-project src/API/Bintainer.Api
 dotnet ef database update --project src/Modules/ActivityLog/Bintainer.Modules.ActivityLog.Infrastructure --startup-project src/API/Bintainer.Api
 ```
 
@@ -69,7 +71,7 @@ Bintainer.slnx (.NET 9 — Clean Architecture modular monolith)
 - **Unit of Work**: each module's DbContext implements `IUnitOfWork`
 - **Domain events**: raised via `Entity.Raise()`, published by `PublishDomainEventsInterceptor`
 - **Activity logging via domain events + MassTransit**: entities raise domain events → handlers publish `ActivityLoggedIntegrationEvent` via `IEventBus` → MassTransit delivers to `ActivityLoggedIntegrationEventConsumer` in ActivityLog module → saved to `activity` schema
-- **Schema-per-module**: `users`, `inventory`, `activity` PostgreSQL schemas
+- **Schema-per-module**: `users`, `inventory`, `catalog`, `activity` PostgreSQL schemas
 
 ## Domain Model
 
@@ -90,9 +92,10 @@ A Compartment references a Component via `ComponentId`. A Component can exist in
 - **PostgreSQL** — database name **`BintainerDb`**, using `Npgsql.EntityFrameworkCore.PostgreSQL`
 - Connection string in `src/API/Bintainer.Api/appsettings.json` under `ConnectionStrings:DefaultConnection`
 - **Snake_case naming** via `EFCore.NamingConventions`
-- **Three DbContexts**:
+- **Four DbContexts**:
   - `UsersDbContext` (extends `IdentityDbContext<IdentityUser>`) — schema `users`
   - `InventoryDbContext` (extends `DbContext`) — schema `inventory`
+  - `CatalogDbContext` (extends `DbContext`) — schema `catalog`
   - `ActivityLogDbContext` (extends `DbContext`) — schema `activity`
 - JWT config in `modules.users.json`, inventory config in `modules.inventory.json`
 

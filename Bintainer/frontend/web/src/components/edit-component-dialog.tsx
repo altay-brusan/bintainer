@@ -33,97 +33,23 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ComboboxInput } from "@/components/ui/combobox-input";
 import type { PartAttribute } from "@/types/api";
-import type { Component } from "@/lib/demo-data";
+import { useFootprints } from "@/hooks/use-footprints";
+import { useCategories } from "@/hooks/use-categories";
+import { useUpdateComponent } from "@/hooks/use-components";
 import { toast } from "sonner";
 
-const existingFootprints = [
-  "0201", "0402", "0603", "0805", "1206", "1210", "2512",
-  "SOT-23", "SOT-223", "SOT-89",
-  "TO-92", "TO-220", "TO-252",
-  "SOP-8", "SOIC-8", "SOIC-16",
-  "TSSOP-8", "TSSOP-16", "TSSOP-20",
-  "QFP-32", "QFP-44", "QFP-48", "QFP-64",
-  "LQFP-32", "LQFP-48", "LQFP-64", "LQFP-100",
-  "QFN-16", "QFN-24", "QFN-32", "QFN-48", "QFN-56",
-  "BGA-256", "BGA-484",
-  "DIP-8", "DIP-14", "DIP-16", "DIP-28",
-  "SMA", "SMB", "SMC",
-];
-
-const categoryTree = [
-  {
-    label: "Resistors",
-    children: [
-      { label: "Chip Resistor (SMD)" },
-      { label: "Through Hole" },
-      { label: "Potentiometers" },
-      { label: "Thermistors" },
-    ],
-  },
-  {
-    label: "Capacitors",
-    children: [
-      { label: "Ceramic (SMD)" },
-      { label: "Electrolytic" },
-      { label: "Film" },
-      { label: "Tantalum" },
-    ],
-  },
-  {
-    label: "Inductors",
-    children: [
-      { label: "Fixed" },
-      { label: "Adjustable" },
-      { label: "Chokes" },
-    ],
-  },
-  {
-    label: "Transistors",
-    children: [
-      { label: "BJT (NPN)" },
-      { label: "BJT (PNP)" },
-      { label: "MOSFET" },
-      { label: "IGBT" },
-    ],
-  },
-  {
-    label: "Microcontrollers",
-    children: [
-      { label: "ARM" },
-      { label: "AVR" },
-      { label: "PIC" },
-      { label: "RISC-V" },
-    ],
-  },
-  {
-    label: "LEDs",
-    children: [
-      { label: "Standard" },
-      { label: "SMD" },
-      { label: "High Power" },
-    ],
-  },
-  {
-    label: "Connectors",
-    children: [
-      { label: "Headers" },
-      { label: "USB" },
-      { label: "Terminal Blocks" },
-    ],
-  },
-  {
-    label: "ICs",
-    children: [
-      { label: "Op-Amps" },
-      { label: "Voltage Regulators" },
-      { label: "Logic Gates" },
-      { label: "Timers" },
-    ],
-  },
-];
-
 interface EditComponentDialogProps {
-  component: Component | null;
+  component: {
+    id: string;
+    partNumber: string;
+    description: string;
+    categoryName?: string;
+    footprintName?: string;
+    tags?: string;
+    unitPrice?: number;
+    manufacturer?: string;
+    manufacturerPartNumber: string;
+  } | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -135,6 +61,17 @@ export function EditComponentDialog({
 }: EditComponentDialogProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const { data: footprintsData } = useFootprints();
+  const { data: categoriesData } = useCategories();
+  const updateComponent = useUpdateComponent();
+
+  const existingFootprints = (footprintsData ?? []).map((f) => f.name);
+
+  const categoryTree = (categoriesData ?? []).map((cat) => ({
+    label: cat.name,
+    children: (cat.children ?? []).map((child) => ({ label: child.name })),
+  }));
+
   const [partNumber, setPartNumber] = useState("");
   const [mfrPartNumber, setMfrPartNumber] = useState("");
   const [description, setDescription] = useState("");
@@ -144,10 +81,7 @@ export function EditComponentDialog({
   const [detailedDescription, setDetailedDescription] = useState("");
   const [footprint, setFootprint] = useState("");
   const [category, setCategory] = useState("");
-  const [supplier, setSupplier] = useState("");
   const [url, setUrl] = useState("");
-  const [binLabel, setBinLabel] = useState("");
-  const [quantity, setQuantity] = useState(0);
   const [unitPrice, setUnitPrice] = useState("");
   const [lowStockThreshold, setLowStockThreshold] = useState(0);
   const [tags, setTags] = useState<string[]>([]);
@@ -159,26 +93,23 @@ export function EditComponentDialog({
   // Populate form when component changes
   useEffect(() => {
     if (!component) return;
-    setPartNumber(component.name);
-    setMfrPartNumber(component.name);
-    setDescription(component.name);
-    setCategory(component.category);
-    setSupplier(component.supplier ?? "");
-    setFootprint(component.package ?? "");
-    setBinLabel(component.bin);
-    setQuantity(component.quantity);
+    setPartNumber(component.partNumber);
+    setMfrPartNumber(component.manufacturerPartNumber);
+    setDescription(component.description);
+    setCategory(component.categoryName ?? "");
+    setFootprint(component.footprintName ?? "");
     setUnitPrice(component.unitPrice != null ? String(component.unitPrice) : "");
-    setLowStockThreshold(component.lowStockThreshold);
-    setUrl(component.datasheetUrl ?? "");
-    setManufacturer("");
+    setManufacturer(component.manufacturer ?? "");
     setDetailedDescription("");
     setImagePreview(null);
     setImageFile(null);
-    setTags(component.tags ?? []);
+    setTags((component.tags ?? "").split(",").filter(Boolean));
     setTagInput("");
     setAttributes([]);
     setNewAttrTitle("");
     setNewAttrValue("");
+    setUrl("");
+    setLowStockThreshold(0);
   }, [component]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -226,10 +157,35 @@ export function EditComponentDialog({
       toast.error("Please fill in all mandatory fields");
       return;
     }
-    // TODO: call API
-    console.log("Updating component:", component?.id);
-    toast.success("Component updated (demo)");
-    onOpenChange(false);
+    if (!component) return;
+
+    const attrRecord: Record<string, string> = {};
+    attributes.forEach((a) => { attrRecord[a.title] = a.value; });
+
+    updateComponent.mutate(
+      {
+        id: component.id,
+        partNumber: partNumber.trim(),
+        manufacturerPartNumber: mfrPartNumber.trim(),
+        description: description.trim(),
+        detailedDescription: detailedDescription.trim() || undefined,
+        manufacturer: manufacturer.trim() || undefined,
+        url: url.trim() || undefined,
+        tags: tags.length > 0 ? tags.join(",") : undefined,
+        unitPrice: unitPrice ? Number(unitPrice) : undefined,
+        lowStockThreshold,
+        attributes: attrRecord,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Component updated");
+          onOpenChange(false);
+        },
+        onError: () => {
+          toast.error("Failed to update component");
+        },
+      }
+    );
   };
 
   const isMandatoryValid =
@@ -355,22 +311,13 @@ export function EditComponentDialog({
                 Details
               </h3>
 
-              <div className="grid grid-cols-4 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 <div>
                   <Label className="text-xs">Manufacturer</Label>
                   <Input
                     placeholder="e.g. Nidec Components"
                     value={manufacturer}
                     onChange={(e) => setManufacturer(e.target.value)}
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label className="text-xs">Supplier</Label>
-                  <Input
-                    placeholder="e.g. Digikey, Mouser"
-                    value={supplier}
-                    onChange={(e) => setSupplier(e.target.value)}
                     className="mt-1"
                   />
                 </div>
@@ -423,7 +370,7 @@ export function EditComponentDialog({
                     className="mt-1"
                   />
                 </div>
-                <div className="col-span-4">
+                <div className="col-span-3">
                   <Label className="text-xs">Product URL / Datasheet</Label>
                   <div className="relative mt-1">
                     <LinkIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -435,7 +382,7 @@ export function EditComponentDialog({
                     />
                   </div>
                 </div>
-                <div className="col-span-4">
+                <div className="col-span-3">
                   <Label className="text-xs">Tags</Label>
                   <div className="mt-1 flex flex-wrap items-center gap-1.5 rounded-md border bg-background p-2 min-h-[38px]">
                     {tags.map((tag) => (
@@ -470,32 +417,10 @@ export function EditComponentDialog({
             {/* Storage */}
             <section className="space-y-5">
               <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-                Storage
+                Pricing
               </h3>
 
-              <div className="grid grid-cols-4 gap-3">
-                <div>
-                  <Label className="text-xs">Bin Label</Label>
-                  <Input
-                    placeholder="e.g. Pod"
-                    value={binLabel}
-                    onChange={(e) => setBinLabel(e.target.value)}
-                    className="mt-1"
-                  />
-                  <p className="mt-1 text-[11px] text-muted-foreground">
-                    Label on the physical bin
-                  </p>
-                </div>
-                <div>
-                  <Label className="text-xs">Quantity</Label>
-                  <Input
-                    type="number"
-                    min={0}
-                    value={quantity}
-                    onChange={(e) => setQuantity(Number(e.target.value))}
-                    className="mt-1"
-                  />
-                </div>
+              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label className="text-xs">Unit Price ($)</Label>
                   <Input
@@ -613,7 +538,11 @@ export function EditComponentDialog({
             <Button variant="outline" size="lg" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button size="lg" onClick={handleSubmit} disabled={!isMandatoryValid}>
+            <Button
+              size="lg"
+              onClick={handleSubmit}
+              disabled={!isMandatoryValid || updateComponent.isPending}
+            >
               <Pencil className="mr-2 h-4 w-4" />
               Save Changes
             </Button>

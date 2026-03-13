@@ -30,9 +30,9 @@ internal sealed class ComponentReadService(IDbConnectionFactory dbConnectionFact
                 p.unit_price AS UnitPrice,
                 p.manufacturer AS Manufacturer,
                 p.low_stock_threshold AS LowStockThreshold
-            FROM inventory.components p
-            LEFT JOIN inventory.categories c ON c.id = p.category_id
-            LEFT JOIN inventory.footprints f ON f.id = p.footprint_id
+            FROM catalog.components p
+            LEFT JOIN catalog.categories c ON c.id = p.category_id
+            LEFT JOIN catalog.footprints f ON f.id = p.footprint_id
             WHERE p.id = @ComponentId
             """;
 
@@ -89,9 +89,9 @@ internal sealed class ComponentReadService(IDbConnectionFactory dbConnectionFact
                 p.tags AS Tags,
                 p.unit_price AS UnitPrice,
                 p.manufacturer AS Manufacturer
-            FROM inventory.components p
-            LEFT JOIN inventory.categories c ON c.id = p.category_id
-            LEFT JOIN inventory.footprints f ON f.id = p.footprint_id
+            FROM catalog.components p
+            LEFT JOIN catalog.categories c ON c.id = p.category_id
+            LEFT JOIN catalog.footprints f ON f.id = p.footprint_id
             """;
 
         if (categoryId.HasValue)
@@ -144,7 +144,7 @@ internal sealed class ComponentReadService(IDbConnectionFactory dbConnectionFact
 
         var whereClause = conditions.Count > 0 ? "WHERE " + string.Join(" AND ", conditions) : "";
 
-        var countSql = $"SELECT COUNT(*) FROM inventory.components p {whereClause}";
+        var countSql = $"SELECT COUNT(*) FROM catalog.components p {whereClause}";
         var totalCount = await connection.ExecuteScalarAsync<int>(countSql, parameters);
 
         page = page < 1 ? 1 : page;
@@ -164,10 +164,10 @@ internal sealed class ComponentReadService(IDbConnectionFactory dbConnectionFact
                 p.tags AS Tags,
                 p.unit_price AS UnitPrice,
                 p.manufacturer AS Manufacturer,
-                COALESCE((SELECT SUM(comp.quantity) FROM inventory.compartments comp WHERE comp.component_id = p.id), 0) AS TotalQuantity
-            FROM inventory.components p
-            LEFT JOIN inventory.categories c ON c.id = p.category_id
-            LEFT JOIN inventory.footprints f ON f.id = p.footprint_id
+                COALESCE((SELECT SUM(comp.quantity) FROM inventory.compartments comp WHERE comp.component_id = p.id), 0)::int AS TotalQuantity
+            FROM catalog.components p
+            LEFT JOIN catalog.categories c ON c.id = p.category_id
+            LEFT JOIN catalog.footprints f ON f.id = p.footprint_id
             {whereClause}
             ORDER BY p.part_number
             LIMIT @Limit OFFSET @Offset
@@ -182,7 +182,7 @@ internal sealed class ComponentReadService(IDbConnectionFactory dbConnectionFact
     {
         await using DbConnection connection = await dbConnectionFactory.OpenConnectionAsync();
 
-        const string sql = "SELECT DISTINCT tags FROM inventory.components WHERE tags IS NOT NULL AND tags != ''";
+        const string sql = "SELECT DISTINCT tags FROM catalog.components WHERE tags IS NOT NULL AND tags != ''";
 
         var rows = await connection.QueryAsync<string>(sql);
 

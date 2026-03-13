@@ -47,7 +47,7 @@ internal sealed class StorageUnitReadService(IDbConnectionFactory dbConnectionFa
             FROM inventory.storage_units su
             LEFT JOIN inventory.bins b ON b.storage_unit_id = su.id
             LEFT JOIN inventory.compartments c ON c.bin_id = b.id
-            LEFT JOIN inventory.components p ON p.id = c.component_id
+            LEFT JOIN catalog.components p ON p.id = c.component_id
             WHERE su.id = @StorageUnitId
             ORDER BY b.column, b.row, c.index
             """;

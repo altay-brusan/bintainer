@@ -16,7 +16,7 @@ internal sealed class BomImportReadService(IDbConnectionFactory dbConnectionFact
         pageSize = pageSize < 1 ? 20 : pageSize > 100 ? 100 : pageSize;
         var offset = (page - 1) * pageSize;
 
-        var totalCount = await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM inventory.bom_imports");
+        var totalCount = await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM catalog.bom_imports");
 
         const string sql =
             """
@@ -24,7 +24,7 @@ internal sealed class BomImportReadService(IDbConnectionFactory dbConnectionFact
                 id AS Id, file_name AS FileName, total_lines AS TotalLines,
                 matched_count AS MatchedCount, new_count AS NewCount,
                 total_value AS TotalValue, user_id AS UserId, date AS Date
-            FROM inventory.bom_imports
+            FROM catalog.bom_imports
             ORDER BY date DESC
             LIMIT @Limit OFFSET @Offset
             """;
